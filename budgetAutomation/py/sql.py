@@ -14,16 +14,16 @@ class Sql:
 
     def check_password(self, login, password):
         cipher = Fernet(properties.cipher_key)
-        self.cursor.execute(f"SELECT u_id, u_password FROM accounts where u_login='{login}'")
+        self.cursor.execute(f"SELECT u_id, u_password, u_login FROM accounts where u_login='{login}'")
         row = self.cursor.fetchone()
         if row is not None:
             pw = cipher.decrypt(str.encode(row[1])).decode('utf8')
             if pw == password:
-                return True, row[0]
+                return True, row[0], row[2]
             else:
-                return False, row[0]
+                return False, row[0], row[2]
         else:
-            return False, 0
+            return False, 0, 0
 
     def add_user(self, login, password):
         cipher = Fernet(properties.cipher_key)
@@ -35,9 +35,9 @@ class Sql:
             self.cnxn.commit()
             self.cursor.execute(f"SELECT u_id from accounts where u_login='{login}'")
             row = self.cursor.fetchone()
-            return True, row[0]
+            return True, row[0], login
         except:
-            return False, 0
+            return False, 0, 0
 
     # def updatePassword(self, login, password):
     #     cipher = Fernet(properties.cipher_key)

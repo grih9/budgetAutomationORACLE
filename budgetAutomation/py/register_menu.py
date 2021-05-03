@@ -1,6 +1,8 @@
 from PyQt5 import QtWidgets
-from RegisterWindow import Ui_MainWindow as register_window
-import StartMenu
+
+import properties
+from register_window import Ui_MainWindow as register_window
+import start_menu
 import sql
 
 class RegisterMenu(QtWidgets.QMainWindow):
@@ -14,7 +16,7 @@ class RegisterMenu(QtWidgets.QMainWindow):
         self.ui.create_account_button.clicked.connect(self.create_button_clicked)
 
     def back_button_clicked(self):
-        self.main = StartMenu.StartMenu()
+        self.main = start_menu.StartMenu()
         self.main.show()
         self.close()
 
@@ -76,7 +78,7 @@ class RegisterMenu(QtWidgets.QMainWindow):
             self.ui.password_line.clear()
         else:
             self.db = sql.Sql()
-            status, id = self.db.add_user(l, p)
+            status, id, login = self.db.add_user(l, p)
             if (status is False):
                 message = "Введенный логин занят. Повторите ввод."
                 error_message = QtWidgets.QErrorMessage(self)
@@ -89,10 +91,12 @@ class RegisterMenu(QtWidgets.QMainWindow):
                 self.db.cnxn.close()
             else:
                 message = 'Аккаунт успешно создан!'
+                properties.current_userID = id
+                properties.current_login = login
                 reply = QtWidgets.QMessageBox.question(self, 'Успех', message,
                                                         QtWidgets.QMessageBox.Ok)
                 if reply == QtWidgets.QMessageBox.Ok:
-                    self.main = StartMenu.StartMenu()
+                    self.main = start_menu.StartMenu()
                     self.main.show()
                     self.db.cnxn.close()
                     self.close()
