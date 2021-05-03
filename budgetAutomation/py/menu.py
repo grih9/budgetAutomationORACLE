@@ -31,7 +31,6 @@ month_mapping = {"01": "Январь",
                  "Декабрь": "12"
                  }
 
-
 class Menu(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -63,6 +62,13 @@ class Menu(QtWidgets.QMainWindow):
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+        header = self.ui.articles_table.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header = self.ui.balances_table.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         self.ui.radio_monthes.setChecked(True)
         self.ui.radio_dates.setChecked(False)
         self.ui.monthes_combo.clear()
@@ -199,36 +205,98 @@ class Menu(QtWidgets.QMainWindow):
         elif (index == 1):
             self.ui.radio_monthes.setChecked(True)
             self.ui.radio_dates.setChecked(False)
+            self.ui.monthes_combo.clear()
+            self.ui.article_oper_add_combo.clear()
+            self.ui.articles_combo.clear()
+            self.ui.oper_edit_combo.clear()
+            self.ui.articles_combo.addItem("Все статьи")
+            self.ui.oper_edit_combo.addItem("")
+            self.ui.article_oper_add_combo.addItem("")
             self.ui.articles_combo.setCurrentIndex(0)
-            self.ui.add_operation_buttonbutton.setEnabled(True)
+            self.ui.add_operation_button.setEnabled(False)
+            self.ui.delete_oper_button.setEnabled(False)
+            self.ui.edit_oper_button.setEnabled(False)
+            self.ui.right_arrow.setEnabled(False)
+            self.ui.add_operation_button.setStyleSheet("background-color: rgb(13, 243, 255)")
+            self.ui.delete_oper_button.setStyleSheet("background-color: rgb(13, 243, 255)")
+            self.ui.edit_oper_button.setStyleSheet("background-color: rgb(13, 243, 255)")
+            self.ui.right_arrow.setStyleSheet("background-color: rgb(13, 243, 255)")
             date = datetime.now()
             self.ui.from_line.setDate(date)
+            self.ui.from_line.setMaximumDate(date)
+            self.ui.to_line.setMinimumDate(date)
             self.ui.to_line.setDate(date)
             self.ui.no_items_label.hide()
             self.ui.operations_table.show()
             self.ui.operations_table.setRowCount(0)
-            self.db.cursor.execute(
-                "SELECT op.create_date, a.name, op.debit, op.credit, b.create_date FROM operations op "
-                "join articles a on op.article_id=a.id "
-                "left join balance b on op.balance_id=b.id")
+            self.db.cursor.execute("SELECT op.create_date FROM operations op order by op.create_date")
             row = self.db.cursor.fetchone()
-            if (row is not None):
-                i = 0
-                while (row is not None):
-                    self.ui.operations_table.setRowCount(self.ui.operations_table.rowCount() + 1)
-                    item = QtWidgets.QTableWidgetItem()
-                    self.ui.operations_table.setVerticalHeaderItem(i, item)
-                    for j in range(5):
-                        elem = str(row[j])
-                        if j == 0:
-                            elem = elem[:10]
-                        self.ui.operations_table.setItem(i, j, QtWidgets.QTableWidgetItem(elem))
-                        self.ui.operations_table.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
-                    row = self.db.cursor.fetchone()
-                    i += 1
+            set_months = set()
+            while (row is not None):
+                year = str(row[0])[:4]
+                month = month_mapping[str(str(row[0])[5:7])]
+                month_string = f"{month} {year}"
+                if month_string not in set_months:
+                    set_months.add(month_string)
+                    self.ui.monthes_combo.addItem(month_string)
+                row = self.db.cursor.fetchone()
+            size = self.ui.monthes_combo.count()
+            if size == 1:
+                self.ui.left_arrow.setEnabled(False)
+                self.ui.left_arrow.setStyleSheet("background-color: rgb(13, 243, 255)")
+            if size != 0:
+                self.ui.monthes_combo.setCurrentIndex(int(size) - 1)
+                text = str(self.ui.monthes_combo.currentText())
+                year = text[-4:]
+                month = month_mapping[text[:-5]]
+                db_from = f"{year}-{month}-01"
+                if month != "12":
+                    month = int(month) + 1
+                    month = f"0{month}" if month < 10 else f"{month}"
+                    db_to = f"{year}-{month}-01"
+                else:
+                    db_to = f"{str(int(year) + 1)}-01-01"
+
+                query = f"SELECT op.id, op.create_date, a.name, op.credit, op.debit, b.create_date FROM operations op " \
+                        f"join articles a on op.article_id=a.id " \
+                        f"left join balance b on op.balance_id=b.id where op.create_date>=to_timestamp('{db_from}', 'YYYY-MM-DD') " \
+                        f"and op.create_date<to_timestamp('{db_to}', 'YYYY-MM-DD')"
+                self.db.cursor.execute(query)
+                row = self.db.cursor.fetchone()
+                self.oper_list = list()
+                if (row is not None):
+                    i = 0
+                    while (row is not None):
+                        self.oper_list.append(str(row[0]))
+                        text_combo = f"{i + 1}. {str(row[1])[:10]}. {str(row[2])} +{str(row[3])} -{str(row[4])}"
+                        self.ui.oper_edit_combo.addItem(text_combo)
+                        self.ui.operations_table.setRowCount(self.ui.operations_table.rowCount() + 1)
+                        item = QtWidgets.QTableWidgetItem()
+                        self.ui.operations_table.setVerticalHeaderItem(i, item)
+                        for j in range(5):
+                            elem = str(row[j + 1])
+                            if j == 0:
+                                elem = elem[:10]
+                            if j == 4 and elem == "None":
+                                elem = "-"
+                            self.ui.operations_table.setItem(i, j, QtWidgets.QTableWidgetItem(elem))
+                            self.ui.operations_table.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
+                        row = self.db.cursor.fetchone()
+                        i += 1
+                else:
+                    self.ui.no_items_label.show()
+                    self.ui.operations_table.hide()
             else:
                 self.ui.no_items_label.show()
                 self.ui.operations_table.hide()
+
+            query = "SELECT a.name from articles a"
+            self.db.cursor.execute(query)
+            row = self.db.cursor.fetchone()
+            while (row is not None):
+                self.ui.article_oper_add_combo.addItem(str(row[0]))
+                self.ui.articles_combo.addItem(str(row[0]))
+                row = self.db.cursor.fetchone()
         elif (index == 2):
             # self.ui.injCheckBox.setChecked(False)
             # self.ui.defB.setChecked(True)
