@@ -2,7 +2,13 @@
   <qresource prefix="money">
     <file>money.png</file>
   </qresource>
+  <qresource prefix="reset_time">
+    <file>reset_time.png</file>
+  </qresource>
   <qresource prefix="budget">
     <file>home_budget.png</file>
+  </qresource>
+  <qresource prefix="reset">
+    <file>reset.png</file>
   </qresource>
 </RCC>

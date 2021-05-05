@@ -37,7 +37,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>12</x>
       <y>170</y>
       <width>991</width>
       <height>531</height>
@@ -496,7 +496,7 @@ color: rgb(255, 255, 255);</string>
        <rect>
         <x>890</x>
         <y>10</y>
-        <width>91</width>
+        <width>88</width>
         <height>31</height>
        </rect>
       </property>
@@ -520,9 +520,9 @@ color: rgb(255, 255, 255);</string>
      <widget class="QComboBox" name="monthes_combo">
       <property name="geometry">
        <rect>
-        <x>465</x>
+        <x>452</x>
         <y>10</y>
-        <width>151</width>
+        <width>150</width>
         <height>31</height>
        </rect>
       </property>
@@ -538,19 +538,14 @@ color: rgb(255, 255, 255);</string>
       <property name="editable">
        <bool>false</bool>
       </property>
-      <item>
-       <property name="text">
-        <string>сентябрь 2019</string>
-       </property>
-      </item>
      </widget>
      <widget class="QToolButton" name="left_arrow">
       <property name="geometry">
        <rect>
-        <x>430</x>
-        <y>10</y>
-        <width>28</width>
-        <height>28</height>
+        <x>417</x>
+        <y>11</y>
+        <width>29</width>
+        <height>29</height>
        </rect>
       </property>
       <property name="cursor">
@@ -570,10 +565,10 @@ color: rgb(255, 255, 255);</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>620</x>
-        <y>10</y>
-        <width>28</width>
-        <height>28</height>
+        <x>608</x>
+        <y>11</y>
+        <width>29</width>
+        <height>29</height>
        </rect>
       </property>
       <property name="cursor">
@@ -590,9 +585,9 @@ color: rgb(255, 255, 255);</string>
      <widget class="QComboBox" name="articles_combo">
       <property name="geometry">
        <rect>
-        <x>670</x>
+        <x>647</x>
         <y>10</y>
-        <width>211</width>
+        <width>201</width>
         <height>31</height>
        </rect>
       </property>
@@ -617,7 +612,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QDateEdit" name="from_line">
       <property name="geometry">
        <rect>
-        <x>40</x>
+        <x>30</x>
         <y>9</y>
         <width>151</width>
         <height>31</height>
@@ -686,7 +681,7 @@ color: rgb(255, 255, 255);</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>220</x>
+        <x>210</x>
         <y>10</y>
         <width>141</width>
         <height>31</height>
@@ -752,9 +747,9 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="to_label">
       <property name="geometry">
        <rect>
-        <x>190</x>
+        <x>182</x>
         <y>14</y>
-        <width>31</width>
+        <width>28</width>
         <height>21</height>
        </rect>
       </property>
@@ -783,7 +778,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="from_label">
       <property name="geometry">
        <rect>
-        <x>15</x>
+        <x>5</x>
         <y>14</y>
         <width>21</width>
         <height>21</height>
@@ -815,7 +810,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QRadioButton" name="radio_dates">
       <property name="geometry">
        <rect>
-        <x>370</x>
+        <x>362</x>
         <y>15</y>
         <width>21</width>
         <height>20</height>
@@ -831,7 +826,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QRadioButton" name="radio_monthes">
       <property name="geometry">
        <rect>
-        <x>400</x>
+        <x>390</x>
         <y>15</y>
         <width>21</width>
         <height>20</height>
@@ -1166,10 +1161,10 @@ color: rgb(255, 255, 255);</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>230</x>
-        <y>415</y>
+        <x>280</x>
+        <y>413</y>
         <width>221</width>
-        <height>25</height>
+        <height>28</height>
        </rect>
       </property>
       <property name="font">
@@ -1194,10 +1189,10 @@ color: rgb(255, 255, 255);</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>470</x>
-        <y>415</y>
+        <x>520</x>
+        <y>413</y>
         <width>121</width>
-        <height>25</height>
+        <height>28</height>
        </rect>
       </property>
       <property name="font">
@@ -1220,10 +1215,10 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="label_3">
       <property name="geometry">
        <rect>
-        <x>0</x>
-        <y>415</y>
-        <width>221</width>
-        <height>31</height>
+        <x>4</x>
+        <y>407</y>
+        <width>197</width>
+        <height>40</height>
        </rect>
       </property>
       <property name="styleSheet">
@@ -1236,10 +1231,10 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="label_5">
       <property name="geometry">
        <rect>
-        <x>740</x>
-        <y>415</y>
-        <width>241</width>
-        <height>31</height>
+        <x>780</x>
+        <y>407</y>
+        <width>201</width>
+        <height>40</height>
        </rect>
       </property>
       <property name="styleSheet">
@@ -1255,10 +1250,10 @@ color: rgb(255, 255, 255);</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>610</x>
-        <y>415</y>
+        <x>660</x>
+        <y>413</y>
         <width>121</width>
-        <height>25</height>
+        <height>28</height>
        </rect>
       </property>
       <property name="font">
@@ -1278,6 +1273,69 @@ color: rgb(255, 255, 255);</string>
        <string>ИЗМЕНИТЬ</string>
       </property>
      </widget>
+     <widget class="QToolButton" name="reset_time">
+      <property name="geometry">
+       <rect>
+        <x>200</x>
+        <y>413</y>
+        <width>28</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">image: url(:/reset_time/reset_time.png);
+background-color: rgb(13, 134, 255);
+color: rgb(255, 255, 255);</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QToolButton" name="reset_edit">
+      <property name="geometry">
+       <rect>
+        <x>240</x>
+        <y>413</y>
+        <width>28</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">image: url(:/reset/reset.png);
+background-color: rgb(13, 134, 255);
+color: rgb(255, 255, 255);</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QToolButton" name="reset_search">
+      <property name="geometry">
+       <rect>
+        <x>854</x>
+        <y>11</y>
+        <width>29</width>
+        <height>29</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">image: url(:/reset/reset.png);
+background-color: rgb(13, 134, 255);
+color: rgb(255, 255, 255);</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="balances">
      <attribute name="title">
@@ -1286,7 +1344,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QComboBox" name="delete_balance_combo">
       <property name="geometry">
        <rect>
-        <x>560</x>
+        <x>540</x>
         <y>10</y>
         <width>241</width>
         <height>31</height>
@@ -1295,7 +1353,7 @@ color: rgb(255, 255, 255);</string>
       <property name="font">
        <font>
         <family>Verdana</family>
-        <pointsize>9</pointsize>
+        <pointsize>10</pointsize>
        </font>
       </property>
      </widget>
@@ -1434,208 +1492,10 @@ color: rgb(255, 255, 255);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel" name="to_label_3">
-      <property name="geometry">
-       <rect>
-        <x>190</x>
-        <y>14</y>
-        <width>31</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>Verdana</family>
-        <pointsize>8</pointsize>
-        <weight>75</weight>
-        <italic>true</italic>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">color: rgb(10,110, 210);</string>
-      </property>
-      <property name="text">
-       <string>по</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-      <property name="wordWrap">
-       <bool>true</bool>
-      </property>
-     </widget>
-     <widget class="QLabel" name="from_label_3">
-      <property name="geometry">
-       <rect>
-        <x>15</x>
-        <y>14</y>
-        <width>21</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>Verdana</family>
-        <pointsize>8</pointsize>
-        <weight>75</weight>
-        <italic>true</italic>
-        <bold>true</bold>
-        <strikeout>false</strikeout>
-       </font>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">color: rgb(10,110, 210);</string>
-      </property>
-      <property name="text">
-       <string>с</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-      <property name="wordWrap">
-       <bool>true</bool>
-      </property>
-     </widget>
-     <widget class="QDateEdit" name="from_line_balance">
-      <property name="geometry">
-       <rect>
-        <x>40</x>
-        <y>9</y>
-        <width>151</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>Verdana</family>
-        <pointsize>11</pointsize>
-       </font>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-      <property name="dateTime">
-       <datetime>
-        <hour>0</hour>
-        <minute>0</minute>
-        <second>0</second>
-        <year>2021</year>
-        <month>1</month>
-        <day>1</day>
-       </datetime>
-      </property>
-      <property name="maximumDateTime">
-       <datetime>
-        <hour>23</hour>
-        <minute>59</minute>
-        <second>59</second>
-        <year>2099</year>
-        <month>12</month>
-        <day>31</day>
-       </datetime>
-      </property>
-      <property name="minimumDateTime">
-       <datetime>
-        <hour>0</hour>
-        <minute>0</minute>
-        <second>0</second>
-        <year>2021</year>
-        <month>1</month>
-        <day>1</day>
-       </datetime>
-      </property>
-      <property name="maximumDate">
-       <date>
-        <year>2099</year>
-        <month>12</month>
-        <day>31</day>
-       </date>
-      </property>
-      <property name="minimumDate">
-       <date>
-        <year>2021</year>
-        <month>1</month>
-        <day>1</day>
-       </date>
-      </property>
-      <property name="calendarPopup">
-       <bool>true</bool>
-      </property>
-     </widget>
-     <widget class="QDateEdit" name="to_line_balance">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="geometry">
-       <rect>
-        <x>220</x>
-        <y>10</y>
-        <width>141</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>Verdana</family>
-        <pointsize>11</pointsize>
-       </font>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-      <property name="dateTime">
-       <datetime>
-        <hour>0</hour>
-        <minute>0</minute>
-        <second>0</second>
-        <year>2021</year>
-        <month>5</month>
-        <day>3</day>
-       </datetime>
-      </property>
-      <property name="maximumDateTime">
-       <datetime>
-        <hour>23</hour>
-        <minute>59</minute>
-        <second>59</second>
-        <year>2099</year>
-        <month>12</month>
-        <day>31</day>
-       </datetime>
-      </property>
-      <property name="minimumDateTime">
-       <datetime>
-        <hour>0</hour>
-        <minute>0</minute>
-        <second>0</second>
-        <year>2021</year>
-        <month>1</month>
-        <day>1</day>
-       </datetime>
-      </property>
-      <property name="maximumDate">
-       <date>
-        <year>2099</year>
-        <month>12</month>
-        <day>31</day>
-       </date>
-      </property>
-      <property name="minimumDate">
-       <date>
-        <year>2021</year>
-        <month>1</month>
-        <day>1</day>
-       </date>
-      </property>
-      <property name="calendarPopup">
-       <bool>true</bool>
-      </property>
-     </widget>
      <widget class="QPushButton" name="create_balance_button">
       <property name="geometry">
        <rect>
-        <x>380</x>
+        <x>290</x>
         <y>10</y>
         <width>161</width>
         <height>31</height>
@@ -1661,7 +1521,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QPushButton" name="delete_balance_button">
       <property name="geometry">
        <rect>
-        <x>810</x>
+        <x>790</x>
         <y>10</y>
         <width>161</width>
         <height>31</height>
@@ -1682,6 +1542,22 @@ color: rgb(255, 255, 255);</string>
       </property>
       <property name="text">
        <string>РАСФОРМИРОВАТЬ</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="delete_balance_combo_2">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>10</y>
+        <width>241</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Verdana</family>
+        <pointsize>10</pointsize>
+       </font>
       </property>
      </widget>
     </widget>

@@ -76,6 +76,7 @@ class RegisterMenu(QtWidgets.QMainWindow):
             error_message.showMessage(message)
             self.ui.password_line_confirm.clear()
             self.ui.password_line.clear()
+
         else:
             self.db = sql.Sql()
             status, id, login = self.db.add_user(l, p)
@@ -100,5 +101,3 @@ class RegisterMenu(QtWidgets.QMainWindow):
                     self.main.show()
                     self.db.cnxn.close()
                     self.close()
-
-
