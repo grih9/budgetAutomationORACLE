@@ -137,6 +137,15 @@ class Ui_MainWindow(object):
         self.label_12.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 0, 255, 0), stop:1 rgba(0, 0, 255, 255));")
         self.label_12.setText("")
         self.label_12.setObjectName("label_12")
+        self.no_articles_label = QtWidgets.QLabel(self.articles)
+        self.no_articles_label.setGeometry(QtCore.QRect(280, 210, 391, 81))
+        font = QtGui.QFont()
+        font.setFamily("Verdana")
+        font.setPointSize(25)
+        self.no_articles_label.setFont(font)
+        self.no_articles_label.setStyleSheet("color: rgb(45, 135, 135);")
+        self.no_articles_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.no_articles_label.setObjectName("no_articles_label")
         self.tabWidget.addTab(self.articles, "")
         self.operations = QtWidgets.QWidget()
         self.operations.setObjectName("operations")
@@ -672,7 +681,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -684,6 +693,7 @@ class Ui_MainWindow(object):
         self.add_article_button.setText(_translate("MainWindow", "ДОБАВИТЬ"))
         self.delete_article_button.setText(_translate("MainWindow", "УДАЛИТЬ"))
         self.edit_article_button.setText(_translate("MainWindow", "ИЗМЕНИТЬ"))
+        self.no_articles_label.setText(_translate("MainWindow", "Статей нет!"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.articles), _translate("MainWindow", "Статьи"))
         self.operations_table.setSortingEnabled(True)
         item = self.operations_table.horizontalHeaderItem(0)
@@ -727,4 +737,3 @@ class Ui_MainWindow(object):
         self.label_4.setText(_translate("MainWindow", "АВТОМАТИЗАЦИЯ ДОМАШНЕГО БЮДЖЕТА"))
         self.exit_button.setText(_translate("MainWindow", "ВЫХОД"))
         self.entry_message.setText(_translate("MainWindow", "Привет, grigoriy_tolstikov!"))
-

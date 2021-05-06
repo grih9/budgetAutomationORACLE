@@ -55,20 +55,8 @@ class Menu(QtWidgets.QMainWindow):
         self.ui.reset_time.clicked.connect(self.reset_time)
         self.ui.reset_edit.clicked.connect(self.reset_edit)
         self.ui.reset_search.clicked.connect(self.reset_search)
-        # self.ui.injJournalButton.clicked.connect(self.injButtonHandler)
-    # #     self.ui.maleRadio.clicked.connect(self.maleRadioHandler)
-    # #     self.ui.femaleRadio.clicked.connect(self.femaleRadioHandler)
-    # #     self.ui.youngRadio.clicked.connect(self.youngRadioHandler)
-    # #     self.ui.resetButton.clicked.connect(self.resetButton_clicked)
-    # #     self.ui.allPlayersRadio.clicked.connect(self.allPlayersRadioHandler)
-    # #     self.ui.defRadio.clicked.connect(self.defRadioHandler)
-    # #     self.ui.midRadio.clicked.connect(self.midRadioHandler)
-    # #     self.ui.forwardRadio.clicked.connect(self.forwardRadioHandler)
-    # #     self.ui.goalkeepersRadio.clicked.connect(self.goalkeepersRadioHandler)
-    # #     self.ui.injCheckBox.stateChanged.connect(self.injCheckBoxHandler)
-    # #     self.ui.expiredRadio.clicked.connect(self.expiredRadioHandler)
-    # #     self.ui.allRadio.clicked.connect(self.allRadioHandler)
-    # #
+        self.ui.articles_combo_edit.currentIndexChanged.connect(self.articles_combo_edit_handler)
+        self.ui.add_article_line.textChanged.connect(self.add_article_line_handler)
         self.ui.tabWidget.setCurrentIndex(1)
         self.db = sql.Sql()
         self.ui.entry_message.setText(f"Привет, {properties.current_login}!")
@@ -841,8 +829,76 @@ class Menu(QtWidgets.QMainWindow):
                 if self.ui.article_oper_add_combo.currentText() == name:
                     break
 
+    def articles_combo_edit_handler(self, index):
+        if index == -1:
+            return
+        if index == 0:
+            self.disable_button(self.ui.delete_article_button)
+            self.disable_button(self.ui.edit_article_button)
+            self.disable_button(self.ui.add_article_button)
+            self.ui.add_article_line.setText("")
+        else:
+            text = str(self.ui.articles_combo_edit.currentText())
+            index = text.find(" ")
+            self.ui.add_article_line.setText(text[index + 1:])
+            self.enable_button(self.ui.delete_article_button)
+            self.enable_button(self.ui.edit_article_button)
+            self.disable_button(self.ui.add_article_button)
+
+    def add_article_line_handler(self):
+        text = str(self.ui.add_article_line.text())
+        if len(text) == 0 or len(text.lstrip(" ")) == 0:
+            if self.ui.articles_combo_edit.currentIndex() != 0:
+                self.enable_button(self.ui.delete_article_button)
+                self.disable_button(self.ui.edit_article_button)
+                self.disable_button(self.ui.add_article_button)
+            else:
+                self.disable_button(self.ui.delete_article_button)
+                self.disable_button(self.ui.edit_article_button)
+                self.disable_button(self.ui.add_article_button)
+        elif self.ui.articles_combo_edit.currentIndex() != 0:
+            self.enable_button(self.ui.delete_article_button)
+            self.enable_button(self.ui.edit_article_button)
+            self.disable_button(self.ui.add_article_button)
+        else:
+            self.disable_button(self.ui.delete_article_button)
+            self.disable_button(self.ui.edit_article_button)
+            self.enable_button(self.ui.add_article_button)
+
     def tab_changed_handler(self, index):
-        if (index == 1):
+        if index == 0:
+            self.disable_button(self.ui.delete_article_button)
+            self.disable_button(self.ui.edit_article_button)
+            self.disable_button(self.ui.add_article_button)
+            self.ui.articles_table.setRowCount(0)
+            self.db = sql.Sql()
+            self.db.cursor.execute("SELECT id, name from articles order by name")
+            self.ui.articles_combo_edit.clear()
+            self.ui.articles_combo_edit.addItem("")
+            row = self.db.cursor.fetchone()
+            self.articles_list = list()
+            if (row is not None):
+                i = 0
+                self.ui.no_articles_label.hide()
+                self.ui.articles_table.show()
+                while (row is not None):
+                    print(row)
+                    self.articles_list.append(str(row[0]))
+                    text_combo = f"{i + 1}. {str(row[1])}"
+                    self.ui.articles_combo_edit.addItem(text_combo)
+                    self.ui.articles_table.setRowCount(self.ui.articles_table.rowCount() + 1)
+                    item = QtWidgets.QTableWidgetItem()
+                    self.ui.articles_table.setVerticalHeaderItem(i, item)
+                    self.ui.articles_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(row[1])))
+                    self.ui.articles_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
+                    self.ui.articles_table.item(i, 0).setTextAlignment(QtCore.Qt.AlignCenter)
+                    row = self.db.cursor.fetchone()
+                    i += 1
+            else:
+                self.ui.no_articles_label.show()
+                self.ui.articles_table.hide()
+
+        elif (index == 1):
             self.ui.radio_monthes.setChecked(True)
             self.ui.radio_dates.setChecked(False)
             self.ui.monthes_combo.clear()
