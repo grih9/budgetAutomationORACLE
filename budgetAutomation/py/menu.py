@@ -67,6 +67,7 @@ class Menu(QtWidgets.QMainWindow):
         self.ui.create_balance_combo.currentIndexChanged.connect(self.create_balance_combo_handler)
         self.ui.delete_balance_button.clicked.connect(self.delete_balance_button_clicked)
         self.ui.create_balance_button.clicked.connect(self.create_balance_button_clicked)
+        self.ui.analyze_button.clicked.connect(self.analyze_button_clicked)
         self.db = sql.Sql()
         self.ui.entry_message.setText(f"Привет, {properties.current_login}!")
         header = self.ui.operations_table.horizontalHeader()
@@ -1254,3 +1255,107 @@ class Menu(QtWidgets.QMainWindow):
                     set_months.add(month_string)
                     self.ui.create_balance_combo.addItem(month_string)
                 row = self.db.cursor.fetchone()
+
+    def analyze_button_clicked(self):
+        db = sql.Sql()
+        if self.ui.radio_monthes.isChecked():
+            text = str(self.ui.monthes_combo.currentText())
+            year = text[-4:]
+            month = month_mapping[text[:-5]]
+            db_from = f"{year}-{month}-01"
+            if month != "12":
+                month = int(month) + 1
+                month = f"0{month}" if month < 10 else f"{month}"
+                db_to = f"{year}-{month}-01"
+            else:
+                db_to = f"{str(int(year) + 1)}-01-01"
+        else:
+            db_from = self.ui.from_line.date()
+            db_to = self.ui.to_line.date()
+            db_from = f"{db_from.year()}-{db_from.month()}-{db_from.day()}"
+            db_to = f"{db_to.year()}-{db_to.month()}-{db_to.day()}"
+        article_name = str(self.ui.articles_combo.currentText())
+        if article_name == "Все статьи":
+            query = f"SELECT op.create_date, a.name, op.credit, op.debit, b.create_date FROM operations op " \
+                    f"join articles a on op.article_id=a.id " \
+                    f"left join balance b on op.balance_id=b.id where op.create_date>=to_timestamp('{db_from}', 'YYYY-MM-DD') " \
+                    f"and op.create_date<=to_timestamp('{db_to}', 'YYYY-MM-DD') order by op.create_date"
+        else:
+            query = f"SELECT op.create_date, a.name, op.credit, op.debit, b.create_date FROM operations op " \
+                    f"join articles a on op.article_id=a.id " \
+                    f"left join balance b on op.balance_id=b.id where op.create_date>=to_timestamp('{db_from}', 'YYYY-MM-DD') " \
+                    f"and op.create_date<=to_timestamp('{db_to}', 'YYYY-MM-DD') and a.name='{article_name}' order by op.create_date"
+        db.cursor.execute(query)
+        row = db.cursor.fetchone()
+        debits = dict()
+        credits = dict()
+        while (row is not None):
+            article = str(row[1])
+            if article not in list(debits.keys()):
+                debits[article] = []
+            if article not in list(credits.keys()):
+                credits[article] = []
+            debit = float(str(row[3]))
+            credit = float(str(row[2]))
+            date = row[0]
+            debits[article].append((date, debit))
+            credits[article].append((date, credit))
+            row = db.cursor.fetchone()
+        if len(debits) == 0 and len(credits) == 0:
+            print("Nothing to show")
+            return
+        if len(debits) != 0:
+            for article in list(debits.keys()):
+                x = [elem[0] for elem in debits[article]]
+                y_tmp = [elem[1] for elem in debits[article]]
+                y = [sum(y_tmp[:i + 1]) for i in range(len(y_tmp))]
+                plt.plot(x, y, label=article)
+            plt.title("debit")
+            plt.legend(loc="best")
+            plt.xticks(rotation=90)
+            plt.show()
+        if len(credits) != 0:
+            for article in list(credits.keys()):
+                x = [elem[0] for elem in credits[article]]
+                y_tmp = [elem[1] for elem in credits[article]]
+                y = [sum(y_tmp[:i + 1]) for i in range(len(y_tmp))]
+                plt.plot(x, y, label=article)
+            plt.title("credit")
+            plt.legend(loc="best")
+            plt.xticks(rotation=90)
+            plt.show()
+        if article_name == "Все статьи":
+            db.cursor.execute(query)
+            row = db.cursor.fetchone()
+            debits = list()
+            credits = list()
+            while (row is not None):
+                debit = float(str(row[3]))
+                credit = float(str(row[2]))
+                date = row[0]
+                debits.append((date, debit))
+                credits.append((date, credit))
+                row = db.cursor.fetchone()
+            if len(debits) == 0 and len(credits) == 0:
+                print("Nothing to show")
+                return
+
+            x = [elem[0] for elem in debits]
+            y_tmp = [elem[1] for elem in debits]
+            y = [sum(y_tmp[:i + 1]) for i in range(len(y_tmp))]
+            plt.plot(x, y, label="Все статьи")
+            plt.title("debit sum")
+            plt.legend(loc="best")
+            plt.xticks(rotation=90)
+            plt.show()
+
+            x = [elem[0] for elem in credits]
+            y_tmp = [elem[1] for elem in credits]
+            y = [sum(y_tmp[:i + 1]) for i in range(len(y_tmp))]
+            plt.plot(x, y, label="Все статьи")
+            plt.title("credit sum")
+            plt.legend(loc="best")
+            plt.xticks(rotation=90)
+            plt.show()
+
+
