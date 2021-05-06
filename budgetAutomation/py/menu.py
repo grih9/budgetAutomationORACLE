@@ -1,4 +1,5 @@
 import sql
+import re
 import start_menu
 import properties
 from datetime import datetime
@@ -57,22 +58,33 @@ class Menu(QtWidgets.QMainWindow):
         self.ui.reset_search.clicked.connect(self.reset_search)
         self.ui.articles_combo_edit.currentIndexChanged.connect(self.articles_combo_edit_handler)
         self.ui.add_article_line.textChanged.connect(self.add_article_line_handler)
+        self.ui.add_article_button.clicked.connect(self.add_article_button_clicked)
+        self.ui.delete_article_button.clicked.connect(self.delete_article_button_clicked)
+        self.ui.edit_article_button.clicked.connect(self.edit_article_button_clicked)
+        self.ui.reset_article.clicked.connect(self.reset_article_clicked)
         self.ui.tabWidget.setCurrentIndex(1)
         self.db = sql.Sql()
         self.ui.entry_message.setText(f"Привет, {properties.current_login}!")
         header = self.ui.operations_table.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+        self.ui.operations_table.verticalHeader().hide()
         header = self.ui.articles_table.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        self.ui.articles_table.verticalHeader().hide()
         header = self.ui.balances_table.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+        self.ui.balances_table.verticalHeader().hide()
         self.ui.article_oper_add_combo.clear()
         self.ui.oper_edit_combo.clear()
         self.ui.oper_edit_combo.addItem("")
@@ -115,7 +127,7 @@ class Menu(QtWidgets.QMainWindow):
         else:
             self.ui.no_items_label.show()
             self.ui.operations_table.hide()
-        query = "SELECT a.name from articles a"
+        query = "SELECT a.name from articles a order by name"
         self.db.cursor.execute(query)
         row = self.db.cursor.fetchone()
         while (row is not None):
@@ -150,6 +162,10 @@ class Menu(QtWidgets.QMainWindow):
         self.ui.article_oper_add_combo.setCurrentIndex(0)
         self.reset_time()
         self.ui.oper_edit_combo.setCurrentIndex(0)
+
+    def reset_article_clicked(self):
+        self.ui.add_article_line.setText("")
+        self.ui.articles_combo_edit.setCurrentIndex(0)
 
     def enable_button(self, button):
         button.setEnabled(True)
@@ -194,11 +210,13 @@ class Menu(QtWidgets.QMainWindow):
                 self.ui.operations_table.setRowCount(self.ui.operations_table.rowCount() + 1)
                 item = QtWidgets.QTableWidgetItem()
                 self.ui.operations_table.setVerticalHeaderItem(i, item)
-                for j in range(5):
-                    elem = str(row[j + 1])
-                    if j == 0:
+                self.ui.operations_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
+                self.ui.operations_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
+                for j in range(1, 6):
+                    elem = str(row[j])
+                    if j == 1:
                         elem = elem[:10]
-                    elif j == 4 and elem == "None":
+                    elif j == 5 and elem == "None":
                         elem = "-"
                     self.ui.operations_table.setItem(i, j, QtWidgets.QTableWidgetItem(elem))
                     self.ui.operations_table.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
@@ -265,11 +283,13 @@ class Menu(QtWidgets.QMainWindow):
                 self.ui.operations_table.setRowCount(self.ui.operations_table.rowCount() + 1)
                 item = QtWidgets.QTableWidgetItem()
                 self.ui.operations_table.setVerticalHeaderItem(i, item)
-                for j in range(5):
-                    elem = str(row[j + 1])
-                    if j == 0:
+                self.ui.operations_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
+                self.ui.operations_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
+                for j in range(1, 6):
+                    elem = str(row[j])
+                    if j == 1:
                         elem = elem[:10]
-                    elif j == 4 and elem == "None":
+                    elif j == 5 and elem == "None":
                         elem = "-"
                     self.ui.operations_table.setItem(i, j, QtWidgets.QTableWidgetItem(elem))
                     self.ui.operations_table.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
@@ -341,11 +361,13 @@ class Menu(QtWidgets.QMainWindow):
                 self.ui.operations_table.setRowCount(self.ui.operations_table.rowCount() + 1)
                 item = QtWidgets.QTableWidgetItem()
                 self.ui.operations_table.setVerticalHeaderItem(i, item)
-                for j in range(5):
-                    elem = str(row[j + 1])
-                    if j == 0:
+                self.ui.operations_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
+                self.ui.operations_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
+                for j in range(1, 6):
+                    elem = str(row[j])
+                    if j == 1:
                         elem = elem[:10]
-                    elif j == 4 and elem == "None":
+                    elif j == 5 and elem == "None":
                         elem = "-"
                     self.ui.operations_table.setItem(i, j, QtWidgets.QTableWidgetItem(elem))
                     self.ui.operations_table.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
@@ -403,11 +425,13 @@ class Menu(QtWidgets.QMainWindow):
                 self.ui.operations_table.setRowCount(self.ui.operations_table.rowCount() + 1)
                 item = QtWidgets.QTableWidgetItem()
                 self.ui.operations_table.setVerticalHeaderItem(i, item)
-                for j in range(5):
-                    elem = str(row[j + 1])
-                    if j == 0:
+                self.ui.operations_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
+                self.ui.operations_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
+                for j in range(1, 6):
+                    elem = str(row[j])
+                    if j == 1:
                         elem = elem[:10]
-                    elif j == 4 and elem == "None":
+                    elif j == 5 and elem == "None":
                         elem = "-"
                     self.ui.operations_table.setItem(i, j, QtWidgets.QTableWidgetItem(elem))
                     self.ui.operations_table.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
@@ -474,11 +498,13 @@ class Menu(QtWidgets.QMainWindow):
                 self.ui.operations_table.setRowCount(self.ui.operations_table.rowCount() + 1)
                 item = QtWidgets.QTableWidgetItem()
                 self.ui.operations_table.setVerticalHeaderItem(i, item)
-                for j in range(5):
-                    elem = str(row[j + 1])
-                    if j == 0:
+                self.ui.operations_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
+                self.ui.operations_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
+                for j in range(1, 6):
+                    elem = str(row[j])
+                    if j == 1:
                         elem = elem[:10]
-                    elif j == 4 and elem == "None":
+                    elif j == 5 and elem == "None":
                         elem = "-"
                     self.ui.operations_table.setItem(i, j, QtWidgets.QTableWidgetItem(elem))
                     self.ui.operations_table.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
@@ -551,12 +577,14 @@ class Menu(QtWidgets.QMainWindow):
                 self.ui.operations_table.setRowCount(self.ui.operations_table.rowCount() + 1)
                 item = QtWidgets.QTableWidgetItem()
                 self.ui.operations_table.setVerticalHeaderItem(i, item)
-                for j in range(5):
-                    elem = str(row[j + 1])
+                self.ui.operations_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
+                self.ui.operations_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
+                for j in range(1, 6):
+                    elem = str(row[j])
                     print(elem)
-                    if j == 0:
+                    if j == 1:
                         elem = elem[:10]
-                    elif j == 4 and elem == "None":
+                    elif j == 5 and elem == "None":
                         elem = "-"
                     self.ui.operations_table.setItem(i, j, QtWidgets.QTableWidgetItem(elem))
                     self.ui.operations_table.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
@@ -850,12 +878,10 @@ class Menu(QtWidgets.QMainWindow):
         if len(text) == 0 or len(text.lstrip(" ")) == 0:
             if self.ui.articles_combo_edit.currentIndex() != 0:
                 self.enable_button(self.ui.delete_article_button)
-                self.disable_button(self.ui.edit_article_button)
-                self.disable_button(self.ui.add_article_button)
             else:
                 self.disable_button(self.ui.delete_article_button)
-                self.disable_button(self.ui.edit_article_button)
-                self.disable_button(self.ui.add_article_button)
+            self.disable_button(self.ui.edit_article_button)
+            self.disable_button(self.ui.add_article_button)
         elif self.ui.articles_combo_edit.currentIndex() != 0:
             self.enable_button(self.ui.delete_article_button)
             self.enable_button(self.ui.edit_article_button)
@@ -864,6 +890,167 @@ class Menu(QtWidgets.QMainWindow):
             self.disable_button(self.ui.delete_article_button)
             self.disable_button(self.ui.edit_article_button)
             self.enable_button(self.ui.add_article_button)
+
+    def add_article_button_clicked(self):
+        db = sql.Sql()
+        article = str(self.ui.add_article_line.text()).strip()
+        if re.search(r"[a-zA-Zа-яА-Я]", article) is None or re.search(r"[a-zA-Zа-яА-Я0-9]", article[0]) is None:
+            message = "Название статьи должно содержать хотя бы одну букву и начинаться с буквы или цифры."
+            error_message = QtWidgets.QErrorMessage(self)
+            error_message.setModal(True)
+            error_message.setWindowTitle("Ошибка добавления")
+            error_message.showMessage(message)
+            return
+        try:
+            db.cursor.execute(f"INSERT into articles (name) values ('{article}')")
+            db.cnxn.commit()
+            message = "Статья успешно добавлена."
+            reply = QtWidgets.QMessageBox.question(self, "Успех", message, QtWidgets.QMessageBox.Ok)
+            self.ui.add_article_line.setText("")
+            self.ui.articles_table.setRowCount(0)
+            db.cursor.execute("SELECT id, name from articles order by name")
+            self.ui.articles_combo_edit.clear()
+            self.ui.articles_combo_edit.addItem("")
+            row = db.cursor.fetchone()
+            self.articles_list = list()
+            if (row is not None):
+                i = 0
+                self.ui.no_articles_label.hide()
+                self.ui.articles_table.show()
+                while (row is not None):
+                    self.articles_list.append(str(row[0]))
+                    text_combo = f"{i + 1}. {str(row[1])}"
+                    self.ui.articles_combo_edit.addItem(text_combo)
+                    self.ui.articles_table.setRowCount(self.ui.articles_table.rowCount() + 1)
+                    item = QtWidgets.QTableWidgetItem()
+                    self.ui.articles_table.setVerticalHeaderItem(i, item)
+                    self.ui.articles_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
+                    self.ui.articles_table.setItem(i, 1, QtWidgets.QTableWidgetItem(str(row[1])))
+                    self.ui.articles_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
+                    self.ui.articles_table.item(i, 1).setFlags(QtCore.Qt.NoItemFlags)
+                    self.ui.articles_table.item(i, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+                    row = db.cursor.fetchone()
+                    i += 1
+            else:
+                self.ui.no_articles_label.show()
+                self.ui.articles_table.hide()
+        except:
+            message = "Статья с таким именем уже есть в базе данных. Введите другое имя."
+            error_message = QtWidgets.QErrorMessage(self)
+            error_message.setModal(True)
+            error_message.setWindowTitle("Ошибка добавления")
+            error_message.showMessage(message)
+
+    def delete_article_button_clicked(self):
+        db = sql.Sql()
+        id = self.articles_list[self.ui.articles_combo_edit.currentIndex() - 1]
+        db.cursor.execute(f"SELECT id, create_date from operations where article_id={id} order by create_date")
+        row = db.cursor.fetchone()
+        if row is not None:
+            message = f"Нельзя удалить используемую статью. Данная статья используется в операции от {str(row[1])[:10]}. " \
+                      f"Измените статью, используемую в операции, или удалите операцию."
+            error_message = QtWidgets.QErrorMessage(self)
+            error_message.setModal(True)
+            error_message.setWindowTitle("Ошибка удаления")
+            error_message.showMessage(message)
+            db.cursor.execute(f"SELECT name from articles where id={id}")
+            row = db.cursor.fetchone()
+            name = row[0]
+            self.ui.add_article_line.setText(name)
+        else:
+            db.cursor.execute(f"DELETE articles where id={id}")
+            db.cnxn.commit()
+            message = "Статья успешно удалена."
+            reply = QtWidgets.QMessageBox.question(self, "Успех", message, QtWidgets.QMessageBox.Ok)
+            self.ui.add_article_line.setText("")
+            self.ui.articles_table.setRowCount(0)
+            db.cursor.execute("SELECT id, name from articles order by name")
+            self.ui.articles_combo_edit.clear()
+            self.ui.articles_combo_edit.addItem("")
+            row = db.cursor.fetchone()
+            self.articles_list = list()
+            if (row is not None):
+                i = 0
+                self.ui.no_articles_label.hide()
+                self.ui.articles_table.show()
+                while (row is not None):
+                    self.articles_list.append(str(row[0]))
+                    text_combo = f"{i + 1}. {str(row[1])}"
+                    self.ui.articles_combo_edit.addItem(text_combo)
+                    self.ui.articles_table.setRowCount(self.ui.articles_table.rowCount() + 1)
+                    item = QtWidgets.QTableWidgetItem()
+                    self.ui.articles_table.setVerticalHeaderItem(i, item)
+                    self.ui.articles_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
+                    self.ui.articles_table.setItem(i, 1, QtWidgets.QTableWidgetItem(str(row[1])))
+                    self.ui.articles_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
+                    self.ui.articles_table.item(i, 1).setFlags(QtCore.Qt.NoItemFlags)
+                    self.ui.articles_table.item(i, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+                    row = db.cursor.fetchone()
+                    i += 1
+            else:
+                self.ui.no_articles_label.show()
+                self.ui.articles_table.hide()
+
+    def edit_article_button_clicked(self):
+        db = sql.Sql()
+        id = self.articles_list[self.ui.articles_combo_edit.currentIndex() - 1]
+        new_name = self.ui.add_article_line.text().strip()
+        db.cursor.execute(f"SELECT balance_id, create_date from operations where article_id={id} and balance_id>0 order by balance_id")
+        row = db.cursor.fetchone()
+        if row is not None:
+            message = f"Нельзя изменить используемую статью. Данная статья используется в операции от {str(row[1])[:10]}. " \
+                      f"Измените статью, используемую в операции, или удалите операцию."
+            error_message = QtWidgets.QErrorMessage(self)
+            error_message.setModal(True)
+            error_message.setWindowTitle("Ошибка изменения")
+            error_message.showMessage(message)
+        else:
+            if re.search(r"[a-zA-Zа-яА-Я]", new_name) is None or re.search(r"[a-zA-Zа-яА-Я0-9]", new_name[0]) is None:
+                message = "Название статьи должно содержать хотя бы одну букву и начинаться с буквы или цифры."
+                error_message = QtWidgets.QErrorMessage(self)
+                error_message.setModal(True)
+                error_message.setWindowTitle("Ошибка изменения")
+                error_message.showMessage(message)
+                return
+            try:
+                db.cursor.execute(f"UPDATE articles set name='{new_name}' where id={id}")
+                db.cnxn.commit()
+                message = "Статья успешно изменена."
+                reply = QtWidgets.QMessageBox.question(self, "Успех", message, QtWidgets.QMessageBox.Ok)
+                self.ui.add_article_line.setText("")
+                self.ui.articles_table.setRowCount(0)
+                db.cursor.execute("SELECT id, name from articles order by name")
+                self.ui.articles_combo_edit.clear()
+                self.ui.articles_combo_edit.addItem("")
+                row = db.cursor.fetchone()
+                self.articles_list = list()
+                if (row is not None):
+                    i = 0
+                    self.ui.no_articles_label.hide()
+                    self.ui.articles_table.show()
+                    while (row is not None):
+                        self.articles_list.append(str(row[0]))
+                        text_combo = f"{i + 1}. {str(row[1])}"
+                        self.ui.articles_combo_edit.addItem(text_combo)
+                        self.ui.articles_table.setRowCount(self.ui.articles_table.rowCount() + 1)
+                        item = QtWidgets.QTableWidgetItem()
+                        self.ui.articles_table.setVerticalHeaderItem(i, item)
+                        self.ui.articles_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
+                        self.ui.articles_table.setItem(i, 1, QtWidgets.QTableWidgetItem(str(row[1])))
+                        self.ui.articles_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
+                        self.ui.articles_table.item(i, 1).setFlags(QtCore.Qt.NoItemFlags)
+                        self.ui.articles_table.item(i, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+                        row = db.cursor.fetchone()
+                        i += 1
+                else:
+                    self.ui.no_articles_label.show()
+                    self.ui.articles_table.hide()
+            except:
+                message = "Статья с таким именем уже есть в базе данных. Введите другое имя."
+                error_message = QtWidgets.QErrorMessage(self)
+                error_message.setModal(True)
+                error_message.setWindowTitle("Ошибка изменения")
+                error_message.showMessage(message)
 
     def tab_changed_handler(self, index):
         if index == 0:
@@ -889,9 +1076,11 @@ class Menu(QtWidgets.QMainWindow):
                     self.ui.articles_table.setRowCount(self.ui.articles_table.rowCount() + 1)
                     item = QtWidgets.QTableWidgetItem()
                     self.ui.articles_table.setVerticalHeaderItem(i, item)
-                    self.ui.articles_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(row[1])))
+                    self.ui.articles_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
+                    self.ui.articles_table.setItem(i, 1, QtWidgets.QTableWidgetItem(str(row[1])))
+                    self.ui.articles_table.item(i, 1).setFlags(QtCore.Qt.NoItemFlags)
+                    self.ui.articles_table.item(i, 1).setTextAlignment(QtCore.Qt.AlignCenter)
                     self.ui.articles_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
-                    self.ui.articles_table.item(i, 0).setTextAlignment(QtCore.Qt.AlignCenter)
                     row = self.db.cursor.fetchone()
                     i += 1
             else:
@@ -972,11 +1161,13 @@ class Menu(QtWidgets.QMainWindow):
                         self.ui.operations_table.setRowCount(self.ui.operations_table.rowCount() + 1)
                         item = QtWidgets.QTableWidgetItem()
                         self.ui.operations_table.setVerticalHeaderItem(i, item)
-                        for j in range(5):
-                            elem = str(row[j + 1])
-                            if j == 0:
+                        self.ui.operations_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
+                        self.ui.operations_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
+                        for j in range(1, 6):
+                            elem = str(row[j])
+                            if j == 1:
                                 elem = elem[:10]
-                            elif j == 4 and elem == "None":
+                            elif j == 5 and elem == "None":
                                 elem = "-"
                             self.ui.operations_table.setItem(i, j, QtWidgets.QTableWidgetItem(elem))
                             self.ui.operations_table.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
@@ -989,10 +1180,46 @@ class Menu(QtWidgets.QMainWindow):
                 self.ui.no_items_label.show()
                 self.ui.operations_table.hide()
 
-            query = "SELECT a.name from articles a"
+            query = "SELECT a.name from articles a order by name"
             db.cursor.execute(query)
             row = db.cursor.fetchone()
             while (row is not None):
                 self.ui.article_oper_add_combo.addItem(str(row[0]))
                 self.ui.articles_combo.addItem(str(row[0]))
                 row = db.cursor.fetchone()
+        elif (index == 2):
+            self.disable_button(self.ui.create_balance_button)
+            self.disable_button(self.ui.delete_balance_button)
+            self.ui.balances_table.setRowCount(0)
+            self.db = sql.Sql()
+            self.ui.no_items_label_2.hide()
+            self.db.cursor.execute("SELECT b.id, b.create_date, b.credit, b.debit, b.amount, oper_count "
+                                   "from balances_with_count b order by b.create_date")
+            self.ui.delete_balance_combo.clear()
+            self.ui.delete_balance_combo.addItem("")
+            row = self.db.cursor.fetchone()
+            self.balances_list = list()
+            if (row is not None):
+                i = 0
+                while (row is not None):
+                    self.balances_list.append(str(row[0]))
+                    text_combo = f"{i + 1}. {str(row[1])[:10]}: {str(row[5])[:-2]} opers, amount={str(row[4])}"
+                    self.ui.delete_balance_combo.addItem(text_combo)
+                    self.ui.balances_table.setRowCount(self.ui.balances_table.rowCount() + 1)
+                    item = QtWidgets.QTableWidgetItem()
+                    self.ui.balances_table.setVerticalHeaderItem(i, item)
+                    self.ui.balances_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
+                    self.ui.balances_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
+                    for j in range(1, 6):
+                        elem = str(row[j])
+                        if j == 1:
+                            elem = elem[:10]
+                        if j == 5:
+                            elem = elem[:-2]
+                        self.ui.balances_table.setItem(i, j, QtWidgets.QTableWidgetItem(elem))
+                        self.ui.balances_table.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
+                    row = self.db.cursor.fetchone()
+                    i += 1
+            else:
+                self.ui.no_items_label_2.show()
+                self.ui.balances_table.hide()

@@ -57,7 +57,7 @@ color: rgb(0, 0, 0)</string>
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <property name="tabBarAutoHide">
      <bool>true</bool>
@@ -91,7 +91,7 @@ color: rgb(0, 0, 0)</string>
        <enum>Qt::SolidLine</enum>
       </property>
       <property name="sortingEnabled">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
       <attribute name="horizontalHeaderMinimumSectionSize">
        <number>50</number>
@@ -103,7 +103,7 @@ color: rgb(0, 0, 0)</string>
        <bool>false</bool>
       </attribute>
       <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-       <bool>true</bool>
+       <bool>false</bool>
       </attribute>
       <attribute name="verticalHeaderDefaultSectionSize">
        <number>35</number>
@@ -111,6 +111,11 @@ color: rgb(0, 0, 0)</string>
       <attribute name="verticalHeaderHighlightSections">
        <bool>false</bool>
       </attribute>
+      <column>
+       <property name="text">
+        <string/>
+       </property>
+      </column>
       <column>
        <property name="text">
         <string>Статья</string>
@@ -132,7 +137,7 @@ color: rgb(0, 0, 0)</string>
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>130</y>
+        <y>140</y>
         <width>251</width>
         <height>181</height>
        </rect>
@@ -150,16 +155,16 @@ color: rgb(0, 0, 0)</string>
      <widget class="QLineEdit" name="add_article_line">
       <property name="geometry">
        <rect>
-        <x>280</x>
+        <x>233</x>
         <y>30</y>
-        <width>251</width>
+        <width>247</width>
         <height>30</height>
        </rect>
       </property>
       <property name="font">
        <font>
         <family>Verdana</family>
-        <pointsize>11</pointsize>
+        <pointsize>10</pointsize>
        </font>
       </property>
       <property name="styleSheet">
@@ -175,9 +180,9 @@ color: rgb(0, 0, 0)</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>550</x>
+        <x>490</x>
         <y>30</y>
-        <width>121</width>
+        <width>107</width>
         <height>30</height>
        </rect>
       </property>
@@ -205,7 +210,7 @@ color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>710</x>
-        <y>330</y>
+        <y>370</y>
         <width>271</width>
         <height>30</height>
        </rect>
@@ -233,7 +238,7 @@ color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>790</x>
-        <y>390</y>
+        <y>420</y>
         <width>121</width>
         <height>30</height>
        </rect>
@@ -261,9 +266,9 @@ color: rgb(255, 255, 255);</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>790</x>
-        <y>440</y>
-        <width>121</width>
+        <x>610</x>
+        <y>30</y>
+        <width>107</width>
         <height>30</height>
        </rect>
       </property>
@@ -287,8 +292,8 @@ color: rgb(255, 255, 255);</string>
      <widget class="QGraphicsView" name="graphicsView_5">
       <property name="geometry">
        <rect>
-        <x>740</x>
-        <y>120</y>
+        <x>730</x>
+        <y>130</y>
         <width>221</width>
         <height>191</height>
        </rect>
@@ -306,9 +311,9 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="label_11">
       <property name="geometry">
        <rect>
-        <x>10</x>
+        <x>5</x>
         <y>10</y>
-        <width>261</width>
+        <width>230</width>
         <height>81</height>
        </rect>
       </property>
@@ -322,9 +327,9 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="label_12">
       <property name="geometry">
        <rect>
-        <x>680</x>
+        <x>750</x>
         <y>10</y>
-        <width>301</width>
+        <width>230</width>
         <height>81</height>
        </rect>
       </property>
@@ -360,6 +365,27 @@ color: rgb(255, 255, 255);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
+     <widget class="QToolButton" name="reset_article">
+      <property name="geometry">
+       <rect>
+        <x>725</x>
+        <y>30</y>
+        <width>30</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">image: url(:/reset/reset.png);
+background-color: rgb(13, 134, 255);
+color: rgb(255, 255, 255);</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="operations">
      <attribute name="title">
@@ -390,7 +416,7 @@ color: rgb(255, 255, 255);</string>
        <enum>Qt::SolidLine</enum>
       </property>
       <property name="sortingEnabled">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
       <attribute name="horizontalHeaderMinimumSectionSize">
        <number>50</number>
@@ -402,7 +428,7 @@ color: rgb(255, 255, 255);</string>
        <bool>false</bool>
       </attribute>
       <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-       <bool>true</bool>
+       <bool>false</bool>
       </attribute>
       <attribute name="verticalHeaderDefaultSectionSize">
        <number>35</number>
@@ -410,6 +436,11 @@ color: rgb(255, 255, 255);</string>
       <attribute name="verticalHeaderHighlightSections">
        <bool>false</bool>
       </attribute>
+      <column>
+       <property name="text">
+        <string/>
+       </property>
+      </column>
       <column>
        <property name="text">
         <string>Дата</string>
@@ -1369,16 +1400,16 @@ color: rgb(255, 255, 255);</string>
      <widget class="QComboBox" name="delete_balance_combo">
       <property name="geometry">
        <rect>
-        <x>540</x>
+        <x>490</x>
         <y>10</y>
-        <width>241</width>
+        <width>291</width>
         <height>31</height>
        </rect>
       </property>
       <property name="font">
        <font>
         <family>Verdana</family>
-        <pointsize>10</pointsize>
+        <pointsize>7</pointsize>
        </font>
       </property>
      </widget>
@@ -1407,7 +1438,7 @@ color: rgb(255, 255, 255);</string>
        <enum>Qt::SolidLine</enum>
       </property>
       <property name="sortingEnabled">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
       <attribute name="horizontalHeaderMinimumSectionSize">
        <number>50</number>
@@ -1419,7 +1450,7 @@ color: rgb(255, 255, 255);</string>
        <bool>false</bool>
       </attribute>
       <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-       <bool>true</bool>
+       <bool>false</bool>
       </attribute>
       <attribute name="verticalHeaderDefaultSectionSize">
        <number>35</number>
@@ -1427,6 +1458,11 @@ color: rgb(255, 255, 255);</string>
       <attribute name="verticalHeaderHighlightSections">
        <bool>false</bool>
       </attribute>
+      <column>
+       <property name="text">
+        <string/>
+       </property>
+      </column>
       <column>
        <property name="text">
         <string>Дата</string>
@@ -1491,6 +1527,22 @@ color: rgb(255, 255, 255);</string>
         <set>AlignCenter</set>
        </property>
       </column>
+      <column>
+       <property name="text">
+        <string>Число операций</string>
+       </property>
+       <property name="font">
+        <font>
+         <family>Verdana</family>
+         <pointsize>9</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="textAlignment">
+        <set>AlignCenter</set>
+       </property>
+      </column>
      </widget>
      <widget class="QLabel" name="no_items_label_2">
       <property name="geometry">
@@ -1520,7 +1572,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QPushButton" name="create_balance_button">
       <property name="geometry">
        <rect>
-        <x>290</x>
+        <x>280</x>
         <y>10</y>
         <width>161</width>
         <height>31</height>
@@ -1572,7 +1624,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QComboBox" name="delete_balance_combo_2">
       <property name="geometry">
        <rect>
-        <x>40</x>
+        <x>30</x>
         <y>10</y>
         <width>241</width>
         <height>31</height>
