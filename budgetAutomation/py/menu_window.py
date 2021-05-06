@@ -629,13 +629,13 @@ class Ui_MainWindow(object):
         self.delete_balance_button.setStyleSheet("background-color: rgb(13, 134, 255);\n"
 "color: rgb(255, 255, 255);")
         self.delete_balance_button.setObjectName("delete_balance_button")
-        self.delete_balance_combo_2 = QtWidgets.QComboBox(self.balances)
-        self.delete_balance_combo_2.setGeometry(QtCore.QRect(30, 10, 241, 31))
+        self.create_balance_combo = QtWidgets.QComboBox(self.balances)
+        self.create_balance_combo.setGeometry(QtCore.QRect(30, 10, 241, 31))
         font = QtGui.QFont()
         font.setFamily("Verdana")
         font.setPointSize(10)
-        self.delete_balance_combo_2.setFont(font)
-        self.delete_balance_combo_2.setObjectName("delete_balance_combo_2")
+        self.create_balance_combo.setFont(font)
+        self.create_balance_combo.setObjectName("create_balance_combo")
         self.tabWidget.addTab(self.balances, "")
         self.label_4 = QtWidgets.QLabel(self.centralwidget)
         self.label_4.setGeometry(QtCore.QRect(30, -10, 931, 101))
@@ -704,7 +704,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):

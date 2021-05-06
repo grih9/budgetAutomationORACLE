@@ -2,6 +2,7 @@ import sql
 import re
 import start_menu
 import properties
+import matplotlib.pyplot as plt
 from datetime import datetime
 from menu_window import Ui_MainWindow as menu_window
 from PyQt5 import QtWidgets, QtCore
@@ -62,7 +63,10 @@ class Menu(QtWidgets.QMainWindow):
         self.ui.delete_article_button.clicked.connect(self.delete_article_button_clicked)
         self.ui.edit_article_button.clicked.connect(self.edit_article_button_clicked)
         self.ui.reset_article.clicked.connect(self.reset_article_clicked)
-        self.ui.tabWidget.setCurrentIndex(1)
+        self.ui.delete_balance_combo.currentIndexChanged.connect(self.delete_balance_combo_handler)
+        self.ui.create_balance_combo.currentIndexChanged.connect(self.create_balance_combo_handler)
+        self.ui.delete_balance_button.clicked.connect(self.delete_balance_button_clicked)
+        self.ui.create_balance_button.clicked.connect(self.create_balance_button_clicked)
         self.db = sql.Sql()
         self.ui.entry_message.setText(f"Привет, {properties.current_login}!")
         header = self.ui.operations_table.horizontalHeader()
@@ -136,9 +140,17 @@ class Menu(QtWidgets.QMainWindow):
             row = self.db.cursor.fetchone()
 
     def exit_button_clicked(self):
-        self.menu = start_menu.StartMenu()
-        self.menu.show()
-        self.close()
+        message = 'Вы уверены, что хотите выйти?'
+        reply = QtWidgets.QMessageBox.question(self, 'Выход из базы данных', message,
+                                               QtWidgets.QMessageBox.Yes,
+                                               QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.Yes:
+            properties.current_userID = 0
+            properties.current_login = ""
+            self.menu = start_menu.StartMenu()
+            self.menu.show()
+            self.close()
+
 
     def disable_button(self, button):
         button.setEnabled(False)
@@ -700,124 +712,134 @@ class Menu(QtWidgets.QMainWindow):
                 self.ui.articles_combo.setCurrentIndex(index)
 
     def delete_oper_button_clicked(self):
-        index = self.ui.oper_edit_combo.currentIndex()
-        id = self.oper_list[index - 1]
-        db = sql.Sql()
-        db.cursor.execute(
-            f"SELECT op.balance_id, b.create_date FROM operations op join balance b on b.id=op.balance_id where op.id={id}")
-        row = db.cursor.fetchone()
-        if row is not None:
-            b_id = row[0]
-            date = row[1]
-        else:
-            b_id = None
-            date = None
-        if b_id is not None:
-            self.ui.oper_edit_combo.setCurrentIndex(0)
-            self.reset_time()
-            self.ui.debit_spin.setValue(0)
-            self.ui.credit_spin.setValue(0)
-            self.ui.article_oper_add_combo.setCurrentIndex(0)
-            message = f"Данная операция уже включена в баланс от 1 {month_mapping[str(date)[5:7]]} {str(date)[:4]}. " \
-                      f"Для удаления операции необходимо расформировать баланс."
-            error_message = QtWidgets.QErrorMessage(self)
-            error_message.setModal(True)
-            error_message.setWindowTitle("Ошибка удаления")
-            error_message.showMessage(message)
-        else:
+        message = "Вы уверены, что хотите удалить операцию?"
+        reply = QtWidgets.QMessageBox.question(self, "Удаление операции", message,
+                                               QtWidgets.QMessageBox.Yes,
+                                               QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.Yes:
+            index = self.ui.oper_edit_combo.currentIndex()
+            id = self.oper_list[index - 1]
             db = sql.Sql()
-            db.cursor.execute(f"DELETE operations where id={id}")
-            db.cnxn.commit()
-            message = "Операция успешно удалена."
-            reply = QtWidgets.QMessageBox.question(self, "Успех", message, QtWidgets.QMessageBox.Ok)
-            self.ui.debit_spin.setValue(0.0)
-            self.ui.credit_spin.setValue(0.0)
-            self.ui.article_oper_add_combo.setCurrentIndex(0)
-            self.reset_time()
-            self.ui.operations_table.setRowCount(0)
-            name = self.ui.monthes_combo.currentText()
-            self.ui.monthes_combo.clear()
-            self.db.cursor.execute("SELECT op.create_date FROM operations op order by op.create_date")
-            row = self.db.cursor.fetchone()
-            set_months = set()
-            while (row is not None):
-                year = str(row[0])[:4]
-                month = month_mapping[str(str(row[0])[5:7])]
-                month_string = f"{month} {year}"
-                if month_string not in set_months:
-                    set_months.add(month_string)
-                    self.ui.monthes_combo.addItem(month_string)
-                row = self.db.cursor.fetchone()
-            for i in range(self.ui.monthes_combo.count()):
-                self.ui.monthes_combo.setCurrentIndex(i)
-                if self.ui.monthes_combo.currentText() == name:
-                    break
-            if self.ui.radio_dates.isChecked():
-                self.disable_button(self.ui.left_arrow)
-                self.disable_button(self.ui.right_arrow)
-            index = self.ui.articles_combo.currentIndex()
-            if index > 0:
-                self.ui.articles_combo.setCurrentIndex(index - 1)
+            db.cursor.execute(
+                f"SELECT op.balance_id, b.create_date FROM operations op join balance b on b.id=op.balance_id where op.id={id}")
+            row = db.cursor.fetchone()
+            if row is not None:
+                b_id = row[0]
+                date = row[1]
             else:
-                self.ui.articles_combo.setCurrentIndex(index + 1)
-            self.ui.articles_combo.setCurrentIndex(index)
-
-    def edit_oper_button_clicked(self):
-        index = self.ui.oper_edit_combo.currentIndex()
-        id = self.oper_list[index - 1]
-        db = sql.Sql()
-        db.cursor.execute(
-            f"SELECT op.balance_id, b.create_date FROM operations op join balance b on b.id=op.balance_id where op.id={id}")
-        row = db.cursor.fetchone()
-        if row is not None:
-            b_id = row[0]
-            date = row[1]
-        else:
-            b_id = None
-            date = None
-        if b_id is not None:
-            self.ui.oper_edit_combo.setCurrentIndex(0)
-            self.reset_time()
-            self.ui.debit_spin.setValue(0)
-            self.ui.credit_spin.setValue(0)
-            self.ui.article_oper_add_combo.setCurrentIndex(0)
-            message = f"Данная операция уже включена в баланс от 1 {month_mapping[str(date)[5:7]]} {str(date)[:4]}. " \
-                      f"Для изменения операции необходимо расформировать баланс."
-            error_message = QtWidgets.QErrorMessage(self)
-            error_message.setModal(True)
-            error_message.setWindowTitle("Ошибка изменения")
-            error_message.showMessage(message)
-        else:
-            credit = self.ui.credit_spin.value()
-            debit = self.ui.debit_spin.value()
-            article = self.ui.article_oper_add_combo.currentText()
-            if int(credit) == 0 and int(debit) == 0:
-                message = "Необходимо ввести приход или расход."
+                b_id = None
+                date = None
+            if b_id is not None:
+                self.ui.oper_edit_combo.setCurrentIndex(0)
+                self.reset_time()
+                self.ui.debit_spin.setValue(0)
+                self.ui.credit_spin.setValue(0)
+                self.ui.article_oper_add_combo.setCurrentIndex(0)
+                message = f"Данная операция уже включена в баланс от 1 {month_mapping[str(date)[5:7]]} {str(date)[:4]}. " \
+                          f"Для удаления операции необходимо расформировать баланс."
                 error_message = QtWidgets.QErrorMessage(self)
                 error_message.setModal(True)
-                error_message.setWindowTitle("Ошибка изменения")
+                error_message.setWindowTitle("Ошибка удаления")
                 error_message.showMessage(message)
             else:
                 db = sql.Sql()
-                db.cursor.execute(f"SELECT id from articles where name='{article}'")
-                row = db.cursor.fetchone()
-                article_id = row[0]
-                db.cursor.execute(f"UPDATE OPERATIONS set article_id={article_id} where id={id}")
-                db.cursor.execute(f"UPDATE OPERATIONS set debit={debit} where id={id}")
-                db.cursor.execute(f"UPDATE OPERATIONS set credit={credit} where id={id}")
+                db.cursor.execute(f"DELETE operations where id={id}")
                 db.cnxn.commit()
-                message = "Операция успешно изменена."
+                message = "Операция успешно удалена."
                 reply = QtWidgets.QMessageBox.question(self, "Успех", message, QtWidgets.QMessageBox.Ok)
                 self.ui.debit_spin.setValue(0.0)
                 self.ui.credit_spin.setValue(0.0)
                 self.ui.article_oper_add_combo.setCurrentIndex(0)
                 self.reset_time()
+                self.ui.operations_table.setRowCount(0)
+                name = self.ui.monthes_combo.currentText()
+                self.ui.monthes_combo.clear()
+                self.db.cursor.execute("SELECT op.create_date FROM operations op order by op.create_date")
+                row = self.db.cursor.fetchone()
+                set_months = set()
+                while (row is not None):
+                    year = str(row[0])[:4]
+                    month = month_mapping[str(str(row[0])[5:7])]
+                    month_string = f"{month} {year}"
+                    if month_string not in set_months:
+                        set_months.add(month_string)
+                        self.ui.monthes_combo.addItem(month_string)
+                    row = self.db.cursor.fetchone()
+                for i in range(self.ui.monthes_combo.count()):
+                    self.ui.monthes_combo.setCurrentIndex(i)
+                    if self.ui.monthes_combo.currentText() == name:
+                        break
+                if self.ui.radio_dates.isChecked():
+                    self.disable_button(self.ui.left_arrow)
+                    self.disable_button(self.ui.right_arrow)
                 index = self.ui.articles_combo.currentIndex()
                 if index > 0:
                     self.ui.articles_combo.setCurrentIndex(index - 1)
                 else:
                     self.ui.articles_combo.setCurrentIndex(index + 1)
                 self.ui.articles_combo.setCurrentIndex(index)
+
+    def edit_oper_button_clicked(self):
+        message = "Вы уверены, что хотите изменить операцию?"
+        reply = QtWidgets.QMessageBox.question(self, "Изменение операции", message,
+                                               QtWidgets.QMessageBox.Yes,
+                                               QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.Yes:
+            index = self.ui.oper_edit_combo.currentIndex()
+            id = self.oper_list[index - 1]
+            db = sql.Sql()
+            db.cursor.execute(
+                f"SELECT op.balance_id, b.create_date FROM operations op join balance b on b.id=op.balance_id where op.id={id}")
+            row = db.cursor.fetchone()
+            if row is not None:
+                b_id = row[0]
+                date = row[1]
+            else:
+                b_id = None
+                date = None
+            if b_id is not None:
+                self.ui.oper_edit_combo.setCurrentIndex(0)
+                self.reset_time()
+                self.ui.debit_spin.setValue(0)
+                self.ui.credit_spin.setValue(0)
+                self.ui.article_oper_add_combo.setCurrentIndex(0)
+                message = f"Данная операция уже включена в баланс от 1 {month_mapping[str(date)[5:7]]} {str(date)[:4]}. " \
+                          f"Для изменения операции необходимо расформировать баланс."
+                error_message = QtWidgets.QErrorMessage(self)
+                error_message.setModal(True)
+                error_message.setWindowTitle("Ошибка изменения")
+                error_message.showMessage(message)
+            else:
+                credit = self.ui.credit_spin.value()
+                debit = self.ui.debit_spin.value()
+                article = self.ui.article_oper_add_combo.currentText()
+                if int(credit) == 0 and int(debit) == 0:
+                    message = "Необходимо ввести приход или расход."
+                    error_message = QtWidgets.QErrorMessage(self)
+                    error_message.setModal(True)
+                    error_message.setWindowTitle("Ошибка изменения")
+                    error_message.showMessage(message)
+                else:
+                    db = sql.Sql()
+                    db.cursor.execute(f"SELECT id from articles where name='{article}'")
+                    row = db.cursor.fetchone()
+                    article_id = row[0]
+                    db.cursor.execute(f"UPDATE OPERATIONS set article_id={article_id} where id={id}")
+                    db.cursor.execute(f"UPDATE OPERATIONS set debit={debit} where id={id}")
+                    db.cursor.execute(f"UPDATE OPERATIONS set credit={credit} where id={id}")
+                    db.cnxn.commit()
+                    message = "Операция успешно изменена."
+                    reply = QtWidgets.QMessageBox.question(self, "Успех", message, QtWidgets.QMessageBox.Ok)
+                    self.ui.debit_spin.setValue(0.0)
+                    self.ui.credit_spin.setValue(0.0)
+                    self.ui.article_oper_add_combo.setCurrentIndex(0)
+                    self.reset_time()
+                    index = self.ui.articles_combo.currentIndex()
+                    if index > 0:
+                        self.ui.articles_combo.setCurrentIndex(index - 1)
+                    else:
+                        self.ui.articles_combo.setCurrentIndex(index + 1)
+                    self.ui.articles_combo.setCurrentIndex(index)
 
     def oper_edit_combo_handler(self, index):
         if index == -1:
@@ -935,7 +957,7 @@ class Menu(QtWidgets.QMainWindow):
                 self.ui.no_articles_label.show()
                 self.ui.articles_table.hide()
         except:
-            message = "Статья с таким именем уже есть в базе данных. Введите другое имя."
+            message = "Статья с таким названием уже есть в базе данных. Введите другое название."
             error_message = QtWidgets.QErrorMessage(self)
             error_message.setModal(True)
             error_message.setWindowTitle("Ошибка добавления")
@@ -992,64 +1014,155 @@ class Menu(QtWidgets.QMainWindow):
                 self.ui.articles_table.hide()
 
     def edit_article_button_clicked(self):
-        db = sql.Sql()
-        id = self.articles_list[self.ui.articles_combo_edit.currentIndex() - 1]
-        new_name = self.ui.add_article_line.text().strip()
-        db.cursor.execute(f"SELECT balance_id, create_date from operations where article_id={id} and balance_id>0 order by balance_id")
-        row = db.cursor.fetchone()
-        if row is not None:
-            message = f"Нельзя изменить используемую статью. Данная статья используется в операции от {str(row[1])[:10]}. " \
-                      f"Измените статью, используемую в операции, или удалите операцию."
-            error_message = QtWidgets.QErrorMessage(self)
-            error_message.setModal(True)
-            error_message.setWindowTitle("Ошибка изменения")
-            error_message.showMessage(message)
-        else:
-            if re.search(r"[a-zA-Zа-яА-Я]", new_name) is None or re.search(r"[a-zA-Zа-яА-Я0-9]", new_name[0]) is None:
-                message = "Название статьи должно содержать хотя бы одну букву и начинаться с буквы или цифры."
+        message = "Вы уверены, что хотите изменить название статьи?"
+        reply = QtWidgets.QMessageBox.question(self, "Изменение статьи", message,
+                                               QtWidgets.QMessageBox.Yes,
+                                               QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.Yes:
+            db = sql.Sql()
+            id = self.articles_list[self.ui.articles_combo_edit.currentIndex() - 1]
+            new_name = self.ui.add_article_line.text().strip()
+            db.cursor.execute(f"SELECT balance_id, create_date from operations where article_id={id} and balance_id>0 order by balance_id")
+            row = db.cursor.fetchone()
+            if row is not None:
+                message = f"Нельзя изменить используемую статью. Данная статья используется в операции от {str(row[1])[:10]}. " \
+                          f"Измените статью, используемую в операции, или удалите операцию."
                 error_message = QtWidgets.QErrorMessage(self)
                 error_message.setModal(True)
                 error_message.setWindowTitle("Ошибка изменения")
                 error_message.showMessage(message)
-                return
+            else:
+                if re.search(r"[a-zA-Zа-яА-Я]", new_name) is None or re.search(r"[a-zA-Zа-яА-Я0-9]", new_name[0]) is None:
+                    message = "Название статьи должно содержать хотя бы одну букву и начинаться с буквы или цифры."
+                    error_message = QtWidgets.QErrorMessage(self)
+                    error_message.setModal(True)
+                    error_message.setWindowTitle("Ошибка изменения")
+                    error_message.showMessage(message)
+                    return
+                try:
+                    db.cursor.execute(f"UPDATE articles set name='{new_name}' where id={id}")
+                    db.cnxn.commit()
+                    message = "Статья успешно изменена."
+                    reply = QtWidgets.QMessageBox.question(self, "Успех", message, QtWidgets.QMessageBox.Ok)
+                    self.ui.add_article_line.setText("")
+                    self.ui.articles_table.setRowCount(0)
+                    db.cursor.execute("SELECT id, name from articles order by name")
+                    self.ui.articles_combo_edit.clear()
+                    self.ui.articles_combo_edit.addItem("")
+                    row = db.cursor.fetchone()
+                    self.articles_list = list()
+                    if (row is not None):
+                        i = 0
+                        self.ui.no_articles_label.hide()
+                        self.ui.articles_table.show()
+                        while (row is not None):
+                            self.articles_list.append(str(row[0]))
+                            text_combo = f"{i + 1}. {str(row[1])}"
+                            self.ui.articles_combo_edit.addItem(text_combo)
+                            self.ui.articles_table.setRowCount(self.ui.articles_table.rowCount() + 1)
+                            item = QtWidgets.QTableWidgetItem()
+                            self.ui.articles_table.setVerticalHeaderItem(i, item)
+                            self.ui.articles_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
+                            self.ui.articles_table.setItem(i, 1, QtWidgets.QTableWidgetItem(str(row[1])))
+                            self.ui.articles_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
+                            self.ui.articles_table.item(i, 1).setFlags(QtCore.Qt.NoItemFlags)
+                            self.ui.articles_table.item(i, 1).setTextAlignment(QtCore.Qt.AlignCenter)
+                            row = db.cursor.fetchone()
+                            i += 1
+                    else:
+                        self.ui.no_articles_label.show()
+                        self.ui.articles_table.hide()
+                except:
+                    message = "Статья с таким названием уже есть в базе данных. Введите другое название."
+                    error_message = QtWidgets.QErrorMessage(self)
+                    error_message.setModal(True)
+                    error_message.setWindowTitle("Ошибка изменения")
+                    error_message.showMessage(message)
+
+    def delete_balance_combo_handler(self, index):
+        if index == -1:
+            return
+        if index == 0:
+            self.disable_button(self.ui.delete_balance_button)
+        else:
+            self.enable_button(self.ui.delete_balance_button)
+
+    def create_balance_combo_handler(self, index):
+        if index == -1:
+            return
+        if index == 0:
+            self.disable_button(self.ui.create_balance_button)
+        else:
+            self.enable_button(self.ui.create_balance_button)
+
+    def delete_balance_button_clicked(self):
+        balance = self.balances_list[self.ui.delete_balance_combo.currentIndex() - 1]
+        db = sql.Sql()
+        db.cursor.execute(f"SELECT create_date from balance where id={balance}")
+        item = str(db.cursor.fetchone()[0])
+        message = f"Вы уверены, что хотите расформировать баланс от {item[:10]}? Все операции, принадлежащие данному балансу, " \
+                  f"станут доступны для изменения и удаления. Если нормальный срок формирования баланса (1 число следующего месяца) " \
+                  f"для данного периода времени уже наступил, то баланс будет автоматически сформирован заново при следующем " \
+                  f"входе в базу данных или же Вы сами сможете сформировать его заново."
+        reply = QtWidgets.QMessageBox.question(self, "Расформирование баланса", message,
+                                               QtWidgets.QMessageBox.Yes,
+                                               QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.Yes:
+            db.cursor.execute(f"UPDATE operations set balance_id=NULL where balance_id={balance}")
+            db.cursor.execute(f"DELETE from balance where id={balance}")
+            db.cnxn.commit()
+            message = "Баланс расформирован."
+            reply = QtWidgets.QMessageBox.question(self, "Успех", message, QtWidgets.QMessageBox.Ok)
+            self.ui.tabWidget.setCurrentIndex(1)
+            self.ui.tabWidget.setCurrentIndex(2)
+
+    def create_balance_button_clicked(self):
+        month_year = self.ui.create_balance_combo.currentText()
+        message = f"Вы уверены, что хотите сформировать баланс для {month_year}? " \
+                  f"Данный период времени будет закрыт для добавления новых операций, а все старый операции, " \
+                  f"попавшие в данный период времени станут не доступны для изменения или удаления."
+        reply = QtWidgets.QMessageBox.question(self, "Расформирование баланса", message,
+                                               QtWidgets.QMessageBox.Yes,
+                                               QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.Yes:
+            db = sql.Sql()
+            text = str(self.ui.create_balance_combo.currentText())
+            year = text[-4:]
+            month = month_mapping[text[:-5]]
+            from_date = f"{year}-{month}-01"
+            if month != "12":
+                month = int(month) + 1
+                month = f"0{month}" if month < 10 else f"{month}"
+                to_date = f"{year}-{month}-01"
+            else:
+                to_date = f"{str(int(year) + 1)}-01-01"
+            create_date = to_date
+            db.cursor.execute(
+                f"SELECT SUM(debit) from OPERATIONS where operations.create_date>=to_timestamp('{from_date}', 'YYYY-MM-DD') "
+                f"and operations.create_date<to_timestamp('{to_date}', 'YYYY-MM-DD')")
+            debit = str(db.cursor.fetchone()[0])
+            db.cursor.execute(
+                f"SELECT SUM(credit) from OPERATIONS where operations.create_date>=to_timestamp('{from_date}', 'YYYY-MM-DD') "
+                f"and operations.create_date<to_timestamp('{to_date}', 'YYYY-MM-DD')")
+            credit = str(db.cursor.fetchone()[0])
+            amount = str(float(credit) - float(debit))
             try:
-                db.cursor.execute(f"UPDATE articles set name='{new_name}' where id={id}")
+                db.cursor.execute(f"INSERT INTO BALANCE (create_date, debit, credit, amount) "
+                                  f"VALUES(to_timestamp('{create_date}', 'YYYY-MM-DD'), {debit}, {credit}, {amount})")
+
+                db.cursor.execute(f"UPDATE OPERATIONS SET balance_id = (select max(id) from balance) where "
+                                  f"operations.create_date>=to_timestamp('{from_date}', 'YYYY-MM-DD') and "
+                                  f"operations.create_date<to_timestamp('{to_date}', 'YYYY-MM-DD')")
                 db.cnxn.commit()
-                message = "Статья успешно изменена."
+                message = "Баланс сформирован."
                 reply = QtWidgets.QMessageBox.question(self, "Успех", message, QtWidgets.QMessageBox.Ok)
-                self.ui.add_article_line.setText("")
-                self.ui.articles_table.setRowCount(0)
-                db.cursor.execute("SELECT id, name from articles order by name")
-                self.ui.articles_combo_edit.clear()
-                self.ui.articles_combo_edit.addItem("")
-                row = db.cursor.fetchone()
-                self.articles_list = list()
-                if (row is not None):
-                    i = 0
-                    self.ui.no_articles_label.hide()
-                    self.ui.articles_table.show()
-                    while (row is not None):
-                        self.articles_list.append(str(row[0]))
-                        text_combo = f"{i + 1}. {str(row[1])}"
-                        self.ui.articles_combo_edit.addItem(text_combo)
-                        self.ui.articles_table.setRowCount(self.ui.articles_table.rowCount() + 1)
-                        item = QtWidgets.QTableWidgetItem()
-                        self.ui.articles_table.setVerticalHeaderItem(i, item)
-                        self.ui.articles_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
-                        self.ui.articles_table.setItem(i, 1, QtWidgets.QTableWidgetItem(str(row[1])))
-                        self.ui.articles_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
-                        self.ui.articles_table.item(i, 1).setFlags(QtCore.Qt.NoItemFlags)
-                        self.ui.articles_table.item(i, 1).setTextAlignment(QtCore.Qt.AlignCenter)
-                        row = db.cursor.fetchone()
-                        i += 1
-                else:
-                    self.ui.no_articles_label.show()
-                    self.ui.articles_table.hide()
+                self.ui.tabWidget.setCurrentIndex(1)
+                self.ui.tabWidget.setCurrentIndex(2)
             except:
-                message = "Статья с таким именем уже есть в базе данных. Введите другое имя."
+                message = "Нельзя сформировать баланс с пустым приходом или расходом."
                 error_message = QtWidgets.QErrorMessage(self)
                 error_message.setModal(True)
-                error_message.setWindowTitle("Ошибка изменения")
+                error_message.setWindowTitle("Ошибка формирования баланса")
                 error_message.showMessage(message)
 
     def tab_changed_handler(self, index):
@@ -1086,113 +1199,18 @@ class Menu(QtWidgets.QMainWindow):
             else:
                 self.ui.no_articles_label.show()
                 self.ui.articles_table.hide()
-
         elif (index == 1):
-            self.ui.radio_monthes.setChecked(True)
-            self.ui.radio_dates.setChecked(False)
-            self.ui.monthes_combo.clear()
-            self.ui.article_oper_add_combo.clear()
-            self.ui.articles_combo.clear()
-            self.ui.oper_edit_combo.clear()
-            self.ui.articles_combo.addItem("Все статьи")
-            self.ui.oper_edit_combo.addItem("")
-            self.ui.article_oper_add_combo.addItem("")
-            self.ui.articles_combo.setCurrentIndex(0)
-            self.ui.add_operation_button.setEnabled(False)
-            self.ui.delete_oper_button.setEnabled(False)
-            self.ui.edit_oper_button.setEnabled(False)
-            self.ui.right_arrow.setEnabled(False)
-            self.ui.from_line.setEnabled(False)
-            self.ui.to_line.setEnabled(False)
-            self.ui.add_operation_button.setStyleSheet("background-color: rgb(13, 243, 255)")
-            self.ui.delete_oper_button.setStyleSheet("background-color: rgb(13, 243, 255)")
-            self.ui.edit_oper_button.setStyleSheet("background-color: rgb(13, 243, 255)")
-            self.ui.right_arrow.setStyleSheet("background-color: rgb(13, 243, 255)")
-            date = datetime.now()
-            self.ui.from_line.setDate(date)
-            self.ui.from_line.setMaximumDate(date)
-            self.ui.to_line.setMinimumDate(date)
-            self.ui.to_line.setDate(date)
-            self.ui.no_items_label.hide()
-            self.ui.operations_table.show()
-            self.ui.operations_table.setRowCount(0)
-            db = sql.Sql()
-            db.cursor.execute("SELECT op.create_date FROM operations op order by op.create_date")
-            row = db.cursor.fetchone()
-            set_months = set()
-            while (row is not None):
-                year = str(row[0])[:4]
-                month = month_mapping[str(str(row[0])[5:7])]
-                month_string = f"{month} {year}"
-                if month_string not in set_months:
-                    set_months.add(month_string)
-                    self.ui.monthes_combo.addItem(month_string)
-                row = db.cursor.fetchone()
-            size = self.ui.monthes_combo.count()
-            if size == 1:
-                self.ui.left_arrow.setEnabled(False)
-                self.ui.left_arrow.setStyleSheet("background-color: rgb(13, 243, 255)")
-            if size > 1:
-                self.ui.monthes_combo.setCurrentIndex(int(size) - 1)
-                text = str(self.ui.monthes_combo.currentText())
-                year = text[-4:]
-                month = month_mapping[text[:-5]]
-                db_from = f"{year}-{month}-01"
-                if month != "12":
-                    month = int(month) + 1
-                    month = f"0{month}" if month < 10 else f"{month}"
-                    db_to = f"{year}-{month}-01"
-                else:
-                    db_to = f"{str(int(year) + 1)}-01-01"
-
-                query = f"SELECT op.id, op.create_date, a.name, op.credit, op.debit, b.create_date FROM operations op " \
-                        f"join articles a on op.article_id=a.id " \
-                        f"left join balance b on op.balance_id=b.id where op.create_date>=to_timestamp('{db_from}', 'YYYY-MM-DD') " \
-                        f"and op.create_date<to_timestamp('{db_to}', 'YYYY-MM-DD') order by op.create_date"
-                db.cursor.execute(query)
-                row = db.cursor.fetchone()
-                self.oper_list = list()
-                if (row is not None):
-                    i = 0
-                    while (row is not None):
-                        self.oper_list.append(str(row[0]))
-                        text_combo = f"{i + 1}. {str(row[1])[:10]}. {str(row[2])} +{str(row[3])} -{str(row[4])}"
-                        self.ui.oper_edit_combo.addItem(text_combo)
-                        self.ui.operations_table.setRowCount(self.ui.operations_table.rowCount() + 1)
-                        item = QtWidgets.QTableWidgetItem()
-                        self.ui.operations_table.setVerticalHeaderItem(i, item)
-                        self.ui.operations_table.setItem(i, 0, QtWidgets.QTableWidgetItem(str(i + 1)))
-                        self.ui.operations_table.item(i, 0).setFlags(QtCore.Qt.NoItemFlags)
-                        for j in range(1, 6):
-                            elem = str(row[j])
-                            if j == 1:
-                                elem = elem[:10]
-                            elif j == 5 and elem == "None":
-                                elem = "-"
-                            self.ui.operations_table.setItem(i, j, QtWidgets.QTableWidgetItem(elem))
-                            self.ui.operations_table.item(i, j).setFlags(QtCore.Qt.NoItemFlags)
-                        row = db.cursor.fetchone()
-                        i += 1
-                else:
-                    self.ui.no_items_label.show()
-                    self.ui.operations_table.hide()
-            else:
-                self.ui.no_items_label.show()
-                self.ui.operations_table.hide()
-
-            query = "SELECT a.name from articles a order by name"
-            db.cursor.execute(query)
-            row = db.cursor.fetchone()
-            while (row is not None):
-                self.ui.article_oper_add_combo.addItem(str(row[0]))
-                self.ui.articles_combo.addItem(str(row[0]))
-                row = db.cursor.fetchone()
+            print(1)
+            self.reset_search()
+            self.reset_time()
+            self.reset_edit()
         elif (index == 2):
             self.disable_button(self.ui.create_balance_button)
             self.disable_button(self.ui.delete_balance_button)
             self.ui.balances_table.setRowCount(0)
             self.db = sql.Sql()
             self.ui.no_items_label_2.hide()
+            self.ui.balances_table.show()
             self.db.cursor.execute("SELECT b.id, b.create_date, b.credit, b.debit, b.amount, oper_count "
                                    "from balances_with_count b order by b.create_date")
             self.ui.delete_balance_combo.clear()
@@ -1223,3 +1241,16 @@ class Menu(QtWidgets.QMainWindow):
             else:
                 self.ui.no_items_label_2.show()
                 self.ui.balances_table.hide()
+            self.ui.create_balance_combo.clear()
+            self.ui.create_balance_combo.addItem("")
+            self.db.cursor.execute("SELECT op.create_date FROM operations op where op.balance_id is NULL order by op.create_date")
+            row = self.db.cursor.fetchone()
+            set_months = set()
+            while (row is not None):
+                year = str(row[0])[:4]
+                month = month_mapping[str(str(row[0])[5:7])]
+                month_string = f"{month} {year}"
+                if month_string not in set_months:
+                    set_months.add(month_string)
+                    self.ui.create_balance_combo.addItem(month_string)
+                row = self.db.cursor.fetchone()
