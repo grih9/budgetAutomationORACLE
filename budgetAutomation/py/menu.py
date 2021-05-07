@@ -139,6 +139,65 @@ class Menu(QtWidgets.QMainWindow):
             self.ui.article_oper_add_combo.addItem(str(row[0]))
             self.ui.articles_combo.addItem(str(row[0]))
             row = self.db.cursor.fetchone()
+        self.auto_create_balance()
+
+    def auto_create_balance(self):
+        time = datetime.now()
+        self.db.cursor.execute(
+            f"SELECT op.create_date FROM operations op where op.balance_id is NULL "
+            f"and op.create_date<to_timestamp('{time.year}-{time.month}-01', 'YYYY-MM-DD') order by op.create_date")
+        row = self.db.cursor.fetchone()
+        set_months = set()
+        while (row is not None):
+            year = str(row[0])[:4]
+            month = month_mapping[str(str(row[0])[5:7])]
+            month_string = f"{month} {year}"
+            if month_string not in set_months:
+                set_months.add(month_string)
+            row = self.db.cursor.fetchone()
+        added = []
+        failed = []
+        for month_year in list(sorted(set_months)):
+            db = sql.Sql()
+            year = month_year[-4:]
+            month = month_mapping[month_year[:-5]]
+            from_date = f"{year}-{month}-01"
+            if month != "12":
+                month = int(month) + 1
+                month = f"0{month}" if month < 10 else f"{month}"
+                to_date = f"{year}-{month}-01"
+            else:
+                to_date = f"{str(int(year) + 1)}-01-01"
+            create_date = to_date
+            db.cursor.execute(
+                f"SELECT SUM(debit) from OPERATIONS where operations.create_date>=to_timestamp('{from_date}', 'YYYY-MM-DD') "
+                f"and operations.create_date<to_timestamp('{to_date}', 'YYYY-MM-DD')")
+            debit = str(db.cursor.fetchone()[0])
+            db.cursor.execute(
+                f"SELECT SUM(credit) from OPERATIONS where operations.create_date>=to_timestamp('{from_date}', 'YYYY-MM-DD') "
+                f"and operations.create_date<to_timestamp('{to_date}', 'YYYY-MM-DD')")
+            credit = str(db.cursor.fetchone()[0])
+            amount = str(float(credit) - float(debit))
+            try:
+                db.cursor.execute(f"INSERT INTO BALANCE (create_date, debit, credit, amount) "
+                                  f"VALUES(to_timestamp('{create_date}', 'YYYY-MM-DD'), {debit}, {credit}, {amount})")
+
+                db.cursor.execute(f"UPDATE OPERATIONS SET balance_id = (select max(id) from balance) where "
+                                  f"operations.create_date>=to_timestamp('{from_date}', 'YYYY-MM-DD') and "
+                                  f"operations.create_date<to_timestamp('{to_date}', 'YYYY-MM-DD')")
+                db.cnxn.commit()
+                added.append(month_year)
+            except:
+                failed.append(month_year)
+        if len(added) != 0 or len(failed) != 0:
+            message = f"С возвращением! Некоторые изменения в базе данных:\n\n"
+            if len(added) != 0:
+                message += f"Баланс автоматически сформирован для {', '.join(added)}."
+            if len(failed) != 0:
+                message += f"Не удалось автоматически сформировать баланс для {', '.join(failed)}. " \
+                           f"Пожалуйста, проверьте операции за данный период."
+            reply = QtWidgets.QMessageBox.question(self, "Системное оповещение", message, QtWidgets.QMessageBox.Ok)
+            self.reset_search()
 
     def exit_button_clicked(self):
         message = 'Вы уверены, что хотите выйти?'
@@ -148,8 +207,9 @@ class Menu(QtWidgets.QMainWindow):
         if reply == QtWidgets.QMessageBox.Yes:
             properties.current_userID = 0
             properties.current_login = ""
-            plt.close("Приходы и расходы")
+            plt.close("Доходы и расходы")
             plt.close("Прибыль")
+            plt.close("Процентное соотношение операций")
             self.menu = start_menu.StartMenu()
             self.menu.show()
             self.close()
@@ -170,8 +230,9 @@ class Menu(QtWidgets.QMainWindow):
         self.ui.monthes_combo.setCurrentIndex(self.ui.monthes_combo.count() - 1)
         self.ui.articles_combo.setCurrentIndex(0)
         self.monthes_radio_clicked()
-        plt.close("Приходы и расходы")
+        plt.close("Доходы и расходы")
         plt.close("Прибыль")
+        plt.close("Процентное соотношение операций")
 
     def reset_edit(self):
         self.ui.debit_spin.setValue(0.0)
@@ -639,7 +700,7 @@ class Menu(QtWidgets.QMainWindow):
         debit = self.ui.debit_spin.value()
         article = self.ui.article_oper_add_combo.currentText()
         if int(credit) == 0 and int(debit) == 0:
-            message = "Необходимо ввести приход или расход."
+            message = "Необходимо ввести доход или расход."
             error_message = QtWidgets.QErrorMessage(self)
             error_message.setModal(True)
             error_message.setWindowTitle("Ошибка добавления")
@@ -819,7 +880,7 @@ class Menu(QtWidgets.QMainWindow):
                 debit = self.ui.debit_spin.value()
                 article = self.ui.article_oper_add_combo.currentText()
                 if int(credit) == 0 and int(debit) == 0:
-                    message = "Необходимо ввести приход или расход."
+                    message = "Необходимо ввести доход или расход."
                     error_message = QtWidgets.QErrorMessage(self)
                     error_message.setModal(True)
                     error_message.setWindowTitle("Ошибка изменения")
@@ -1164,7 +1225,7 @@ class Menu(QtWidgets.QMainWindow):
                 self.ui.tabWidget.setCurrentIndex(1)
                 self.ui.tabWidget.setCurrentIndex(2)
             except:
-                message = "Нельзя сформировать баланс с пустым приходом или расходом."
+                message = "Нельзя сформировать баланс с пустым доходом или расходом."
                 error_message = QtWidgets.QErrorMessage(self)
                 error_message.setModal(True)
                 error_message.setWindowTitle("Ошибка формирования баланса")
@@ -1172,8 +1233,9 @@ class Menu(QtWidgets.QMainWindow):
 
     def tab_changed_handler(self, index):
         if index == 0:
-            plt.close("Приходы и расходы")
+            plt.close("Доходы и расходы")
             plt.close("Прибыль")
+            plt.close("Процентное соотношение операций")
             self.disable_button(self.ui.delete_article_button)
             self.disable_button(self.ui.edit_article_button)
             self.disable_button(self.ui.add_article_button)
@@ -1212,8 +1274,9 @@ class Menu(QtWidgets.QMainWindow):
             self.reset_time()
             self.reset_edit()
         elif (index == 2):
-            plt.close("Приходы и расходы")
+            plt.close("Доходы и расходы")
             plt.close("Прибыль")
+            plt.close("Процентное соотношение операций")
             self.disable_button(self.ui.create_balance_button)
             self.disable_button(self.ui.delete_balance_button)
             self.ui.balances_table.setRowCount(0)
@@ -1339,9 +1402,9 @@ class Menu(QtWidgets.QMainWindow):
             error_message.setWindowTitle("Ошибка анализа данных")
             error_message.showMessage(message)
             return
-        fig, sub = plt.subplots(2, 2, num="Приходы и расходы", figsize=(16, 8))
+        fig, sub = plt.subplots(2, 2, num="Доходы и расходы", figsize=(16, 8))
         fig.clf()
-        fig, sub = plt.subplots(2, 2, num="Приходы и расходы", figsize=(16, 8))
+        fig, sub = plt.subplots(2, 2, num="Доходы и расходы", figsize=(16, 8))
         sub[0, 0].clear()
         for article in list(debits.keys()):
             debits[article].append((to_date, 0))
@@ -1368,48 +1431,49 @@ class Menu(QtWidgets.QMainWindow):
             if max(y_c) == 0 and len(credits) != 1:
                 continue
             sub[0, 1].plot(x, y_c, label=article)
-        sub[0, 1].set_title("Приход")
+        sub[0, 1].set_title("Доход")
         sub[0, 1].legend(loc="best")
         plt.setp(sub[0, 1].get_xticklabels(), fontsize=7)
         # sub[0, 1].set_xticklabels(x, rotation=90)
         # sub[0, 1].set_yticklabels(y_c)
         #sub[0, 1].set_xtickslabels(rotation=90)
-        if article_name == "Все статьи":
-            db.cursor.execute(query)
-            row = db.cursor.fetchone()
-            year = int(db_from[:4]) if self.ui.radio_monthes.isChecked() else self.ui.from_line.date().year()
-            month = int(db_from[5:7]) if self.ui.radio_monthes.isChecked() else self.ui.from_line.date().month()
-            day = int(db_from[8:10]) if self.ui.radio_monthes.isChecked() else self.ui.from_line.date().day()
-            from_date = datetime.now()
-            from_date = from_date.replace(year=year, month=month, day=day,
-                                          hour=00, minute=00, second=00, microsecond=00)
-            from_date = from_date - timedelta(seconds=10)
-            year = t_date.year if self.ui.radio_monthes.isChecked() else self.ui.to_line.date().year()
-            month = t_date.month if self.ui.radio_monthes.isChecked() else self.ui.to_line.date().month()
-            day = t_date.day if self.ui.radio_monthes.isChecked() else self.ui.to_line.date().day()
-            to_date = datetime.now()
-            to_date = to_date.replace(year=year, month=month, day=day,
+
+        db.cursor.execute(query)
+        row = db.cursor.fetchone()
+        year = int(db_from[:4]) if self.ui.radio_monthes.isChecked() else self.ui.from_line.date().year()
+        month = int(db_from[5:7]) if self.ui.radio_monthes.isChecked() else self.ui.from_line.date().month()
+        day = int(db_from[8:10]) if self.ui.radio_monthes.isChecked() else self.ui.from_line.date().day()
+        from_date = datetime.now()
+        from_date = from_date.replace(year=year, month=month, day=day,
                                       hour=00, minute=00, second=00, microsecond=00)
-            to_date = to_date + timedelta(seconds=10)
-            debits = [(from_date, 0)]
-            credits = [(from_date, 0)]
-            while (row is not None):
-                debit = float(str(row[3]))
-                credit = float(str(row[2]))
-                date = row[0]
-                debits.append((date, debit))
-                credits.append((date, credit))
-                row = db.cursor.fetchone()
-            if len(debits) == 0 and len(credits) == 0:
-                print("Nothing to show")
-                return
-            # plt.figure(num=3, figsize=(7, 5))
-            # plt.clf()
-            sub[1, 0].clear()
-            debits.append((to_date, 0))
-            credits.append((to_date, 0))
-            x = [elem[0] for elem in debits]
-            y_tmp = [elem[1] for elem in debits]
+        from_date = from_date - timedelta(seconds=10)
+        year = t_date.year if self.ui.radio_monthes.isChecked() else self.ui.to_line.date().year()
+        month = t_date.month if self.ui.radio_monthes.isChecked() else self.ui.to_line.date().month()
+        day = t_date.day if self.ui.radio_monthes.isChecked() else self.ui.to_line.date().day()
+        to_date = datetime.now()
+        to_date = to_date.replace(year=year, month=month, day=day,
+                                  hour=00, minute=00, second=00, microsecond=00)
+        to_date = to_date + timedelta(seconds=10)
+        debits_all = [(from_date, 0)]
+        credits_all = [(from_date, 0)]
+        while (row is not None):
+            debit = float(str(row[3]))
+            credit = float(str(row[2]))
+            date = row[0]
+            debits_all.append((date, debit))
+            credits_all.append((date, credit))
+            row = db.cursor.fetchone()
+        if len(debits_all) == 0 and len(credits_all) == 0:
+            print("Nothing to show")
+            return
+        # plt.figure(num=3, figsize=(7, 5))
+        # plt.clf()
+        sub[1, 0].clear()
+        debits_all.append((to_date, 0))
+        credits_all.append((to_date, 0))
+        if article_name == "Все статьи":
+            x = [elem[0] for elem in debits_all]
+            y_tmp = [elem[1] for elem in debits_all]
             y_d = [sum(y_tmp[:i + 1]) for i in range(len(y_tmp))]
             sub[1, 0].plot(x, y_d, label="Все статьи")
             sub[1, 0].set_title("Расход по всем статьям")
@@ -1419,11 +1483,11 @@ class Menu(QtWidgets.QMainWindow):
             # plt.figure(num=4, figsize=(7, 5))
             # plt.clf()
             sub[1, 1].clear()
-            x = [elem[0] for elem in credits]
-            y_tmp = [elem[1] for elem in credits]
+            x = [elem[0] for elem in credits_all]
+            y_tmp = [elem[1] for elem in credits_all]
             y_c = [sum(y_tmp[:i + 1]) for i in range(len(y_tmp))]
             sub[1, 1].plot(x, y_c, label="Все статьи")
-            sub[1, 1].set_title("Приход по всем статьям")
+            sub[1, 1].set_title("Доход по всем статьям")
             sub[1, 1].legend(loc="best")
             plt.setp(sub[1, 1].get_xticklabels(), fontsize=7)
             # sub[1, 1].set_xticklabels(x, rotation=90)
@@ -1436,4 +1500,41 @@ class Menu(QtWidgets.QMainWindow):
         plt.plot(x, y)
         plt.title("Прибыль по времени")
         plt.xticks(fontsize=7)
+        plt.tight_layout()
+        sum_debit = sum([elem[1] for elem in debits_all])
+        sum_credit = sum([elem[1] for elem in credits_all])
+        perc_debit = dict()
+        perc_credit = dict()
+        for article in debits:
+            art_deb = sum([elem[1] for elem in debits[article]])
+            if sum_debit != 0:
+                perc = art_deb / sum_debit * 100
+            else:
+                perc = 0
+            perc_debit[article] = perc
+            art_cred = sum([elem[1] for elem in credits[article]])
+            if sum_credit != 0:
+                perc = art_cred  / sum_credit * 100
+            else:
+                perc = 0
+            perc_credit[article] = perc
+        print(perc_debit)
+        print(perc_credit)
+        fig, sub = plt.subplots(1, 2, num="Процентное соотношение операций", figsize=(10, 5))
+        fig.clf()
+        fig, sub = plt.subplots(1, 2, num="Процентное соотношение операций", figsize=(10, 5))
+        sub[0].clear()
+        labels = [elem for elem in perc_debit.keys() if perc_debit[elem] != 0]
+        values = [perc_debit[elem] for elem in perc_debit.keys() if perc_debit[elem] != 0]
+        if sum_debit != 0:
+            sub[0].pie(values, labels=labels, autopct='%.1f')
+            sub[0].axis('equal')
+            sub[0].set_title("Расходы")
+        sub[1].clear()
+        labels = [elem for elem in perc_credit.keys() if perc_credit[elem] != 0]
+        values = [perc_credit[elem] for elem in perc_credit.keys() if perc_credit[elem] != 0]
+        if sum_credit != 0:
+            sub[1].pie(values, labels=labels, autopct='%.1f')
+            sub[1].axis('equal')
+            sub[1].set_title("Доходы")
         plt.tight_layout()

@@ -1,7 +1,7 @@
 import sys
 
 from PyQt5 import QtWidgets
-
+from matplotlib import pyplot
 from start_menu import StartMenu
 from sql import Sql
 

@@ -475,7 +475,7 @@ color: rgb(255, 255, 255);</string>
       </column>
       <column>
        <property name="text">
-        <string>Приход</string>
+        <string>Доход</string>
        </property>
        <property name="font">
         <font>
@@ -1183,7 +1183,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="entry_message_5">
       <property name="geometry">
        <rect>
-        <x>270</x>
+        <x>275</x>
         <y>455</y>
         <width>51</width>
         <height>21</height>
@@ -1202,7 +1202,7 @@ color: rgb(255, 255, 255);</string>
        <string notr="true">color: rgb(10,110, 210);</string>
       </property>
       <property name="text">
-       <string>Приход</string>
+       <string>Доход</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1481,7 +1481,7 @@ color: rgb(255, 255, 255);</string>
       </column>
       <column>
        <property name="text">
-        <string>Приход</string>
+        <string>Доход</string>
        </property>
        <property name="font">
         <font>
