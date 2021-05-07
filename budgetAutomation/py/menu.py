@@ -3,7 +3,7 @@ import re
 import start_menu
 import properties
 import matplotlib.pyplot as plt
-from datetime import datetime
+from datetime import datetime, timedelta
 from menu_window import Ui_MainWindow as menu_window
 from PyQt5 import QtWidgets, QtCore
 
@@ -148,6 +148,8 @@ class Menu(QtWidgets.QMainWindow):
         if reply == QtWidgets.QMessageBox.Yes:
             properties.current_userID = 0
             properties.current_login = ""
+            plt.close("Приходы и расходы")
+            plt.close("Прибыль")
             self.menu = start_menu.StartMenu()
             self.menu.show()
             self.close()
@@ -168,6 +170,8 @@ class Menu(QtWidgets.QMainWindow):
         self.ui.monthes_combo.setCurrentIndex(self.ui.monthes_combo.count() - 1)
         self.ui.articles_combo.setCurrentIndex(0)
         self.monthes_radio_clicked()
+        plt.close("Приходы и расходы")
+        plt.close("Прибыль")
 
     def reset_edit(self):
         self.ui.debit_spin.setValue(0.0)
@@ -1168,6 +1172,8 @@ class Menu(QtWidgets.QMainWindow):
 
     def tab_changed_handler(self, index):
         if index == 0:
+            plt.close("Приходы и расходы")
+            plt.close("Прибыль")
             self.disable_button(self.ui.delete_article_button)
             self.disable_button(self.ui.edit_article_button)
             self.disable_button(self.ui.add_article_button)
@@ -1206,6 +1212,8 @@ class Menu(QtWidgets.QMainWindow):
             self.reset_time()
             self.reset_edit()
         elif (index == 2):
+            plt.close("Приходы и расходы")
+            plt.close("Прибыль")
             self.disable_button(self.ui.create_balance_button)
             self.disable_button(self.ui.delete_balance_button)
             self.ui.balances_table.setRowCount(0)
@@ -1258,6 +1266,7 @@ class Menu(QtWidgets.QMainWindow):
 
     def analyze_button_clicked(self):
         db = sql.Sql()
+        plt.ion()
         if self.ui.radio_monthes.isChecked():
             text = str(self.ui.monthes_combo.currentText())
             year = text[-4:]
@@ -1269,6 +1278,14 @@ class Menu(QtWidgets.QMainWindow):
                 db_to = f"{year}-{month}-01"
             else:
                 db_to = f"{str(int(year) + 1)}-01-01"
+            year = int(db_to[:4])
+            month = int(db_to[5:7])
+            day = int(db_to[8:10])
+            t_date = datetime.now()
+            t_date = t_date.replace(year=year, month=month, day=day,
+                                      hour=00, minute=00, second=00, microsecond=00)
+            t_date -= timedelta(days=1)
+            db_to = f"{t_date.year}-{t_date.month}-{t_date.day}"
         else:
             db_from = self.ui.from_line.date()
             db_to = self.ui.to_line.date()
@@ -1291,10 +1308,24 @@ class Menu(QtWidgets.QMainWindow):
         credits = dict()
         while (row is not None):
             article = str(row[1])
+            from_date = datetime.now()
+            year = int(db_from[:4]) if self.ui.radio_monthes.isChecked() else self.ui.from_line.date().year()
+            month = int(db_from[5:7]) if self.ui.radio_monthes.isChecked() else self.ui.from_line.date().month()
+            day = int(db_from[8:10]) if self.ui.radio_monthes.isChecked() else self.ui.from_line.date().day()
+            from_date = from_date.replace(year=year, month=month, day=day,
+                                          hour=00, minute=00, second=00, microsecond=00)
+            from_date = from_date - timedelta(seconds=10)
+            year = t_date.year if self.ui.radio_monthes.isChecked() else self.ui.to_line.date().year()
+            month = t_date.month if self.ui.radio_monthes.isChecked() else self.ui.to_line.date().month()
+            day = t_date.day if self.ui.radio_monthes.isChecked() else self.ui.to_line.date().day()
+            to_date = datetime.now()
+            to_date = to_date.replace(year=year, month=month, day=day,
+                                      hour=00, minute=00, second=00, microsecond=00)
+            to_date = to_date + timedelta(seconds=10)
             if article not in list(debits.keys()):
-                debits[article] = []
+                debits[article] = [(from_date, 0)]
             if article not in list(credits.keys()):
-                credits[article] = []
+                credits[article] = [(from_date, 0)]
             debit = float(str(row[3]))
             credit = float(str(row[2]))
             date = row[0]
@@ -1302,33 +1333,66 @@ class Menu(QtWidgets.QMainWindow):
             credits[article].append((date, credit))
             row = db.cursor.fetchone()
         if len(debits) == 0 and len(credits) == 0:
-            print("Nothing to show")
+            message = "Нет данных для анализа."
+            error_message = QtWidgets.QErrorMessage(self)
+            error_message.setModal(True)
+            error_message.setWindowTitle("Ошибка анализа данных")
+            error_message.showMessage(message)
             return
-        if len(debits) != 0:
-            for article in list(debits.keys()):
-                x = [elem[0] for elem in debits[article]]
-                y_tmp = [elem[1] for elem in debits[article]]
-                y = [sum(y_tmp[:i + 1]) for i in range(len(y_tmp))]
-                plt.plot(x, y, label=article)
-            plt.title("debit")
-            plt.legend(loc="best")
-            plt.xticks(rotation=90)
-            plt.show()
-        if len(credits) != 0:
-            for article in list(credits.keys()):
-                x = [elem[0] for elem in credits[article]]
-                y_tmp = [elem[1] for elem in credits[article]]
-                y = [sum(y_tmp[:i + 1]) for i in range(len(y_tmp))]
-                plt.plot(x, y, label=article)
-            plt.title("credit")
-            plt.legend(loc="best")
-            plt.xticks(rotation=90)
-            plt.show()
+        fig, sub = plt.subplots(2, 2, num="Приходы и расходы", figsize=(16, 8))
+        fig.clf()
+        fig, sub = plt.subplots(2, 2, num="Приходы и расходы", figsize=(16, 8))
+        sub[0, 0].clear()
+        for article in list(debits.keys()):
+            debits[article].append((to_date, 0))
+            x = [elem[0] for elem in debits[article]]
+            y_tmp = [elem[1] for elem in debits[article]]
+            y_d = [sum(y_tmp[:i + 1]) for i in range(len(y_tmp))]
+            if max(y_d) == 0 and len(debits) != 1:
+                continue
+            sub[0, 0].plot(x, y_d, label=article)
+        sub[0, 0].set_title("Расход")
+        sub[0, 0].legend(loc="best")
+        plt.setp(sub[0, 0].get_xticklabels(), fontsize=7)
+        # sub[0, 0].set_xticklabels(x, rotation=90)
+        # sub[0, 0].set_yticklabels(y_d)
+        #sub[0, 0].set_xtickslabels(rotation=90)
+        # plt.figure(num=2, figsize=(7, 5))
+        # plt.clf()
+        sub[0, 1].clear()
+        for article in list(credits.keys()):
+            credits[article].append((to_date, 0))
+            x = [elem[0] for elem in credits[article]]
+            y_tmp = [elem[1] for elem in credits[article]]
+            y_c = [sum(y_tmp[:i + 1]) for i in range(len(y_tmp))]
+            if max(y_c) == 0 and len(credits) != 1:
+                continue
+            sub[0, 1].plot(x, y_c, label=article)
+        sub[0, 1].set_title("Приход")
+        sub[0, 1].legend(loc="best")
+        plt.setp(sub[0, 1].get_xticklabels(), fontsize=7)
+        # sub[0, 1].set_xticklabels(x, rotation=90)
+        # sub[0, 1].set_yticklabels(y_c)
+        #sub[0, 1].set_xtickslabels(rotation=90)
         if article_name == "Все статьи":
             db.cursor.execute(query)
             row = db.cursor.fetchone()
-            debits = list()
-            credits = list()
+            year = int(db_from[:4]) if self.ui.radio_monthes.isChecked() else self.ui.from_line.date().year()
+            month = int(db_from[5:7]) if self.ui.radio_monthes.isChecked() else self.ui.from_line.date().month()
+            day = int(db_from[8:10]) if self.ui.radio_monthes.isChecked() else self.ui.from_line.date().day()
+            from_date = datetime.now()
+            from_date = from_date.replace(year=year, month=month, day=day,
+                                          hour=00, minute=00, second=00, microsecond=00)
+            from_date = from_date - timedelta(seconds=10)
+            year = t_date.year if self.ui.radio_monthes.isChecked() else self.ui.to_line.date().year()
+            month = t_date.month if self.ui.radio_monthes.isChecked() else self.ui.to_line.date().month()
+            day = t_date.day if self.ui.radio_monthes.isChecked() else self.ui.to_line.date().day()
+            to_date = datetime.now()
+            to_date = to_date.replace(year=year, month=month, day=day,
+                                      hour=00, minute=00, second=00, microsecond=00)
+            to_date = to_date + timedelta(seconds=10)
+            debits = [(from_date, 0)]
+            credits = [(from_date, 0)]
             while (row is not None):
                 debit = float(str(row[3]))
                 credit = float(str(row[2]))
@@ -1339,23 +1403,37 @@ class Menu(QtWidgets.QMainWindow):
             if len(debits) == 0 and len(credits) == 0:
                 print("Nothing to show")
                 return
-
+            # plt.figure(num=3, figsize=(7, 5))
+            # plt.clf()
+            sub[1, 0].clear()
+            debits.append((to_date, 0))
+            credits.append((to_date, 0))
             x = [elem[0] for elem in debits]
             y_tmp = [elem[1] for elem in debits]
-            y = [sum(y_tmp[:i + 1]) for i in range(len(y_tmp))]
-            plt.plot(x, y, label="Все статьи")
-            plt.title("debit sum")
-            plt.legend(loc="best")
-            plt.xticks(rotation=90)
-            plt.show()
-
+            y_d = [sum(y_tmp[:i + 1]) for i in range(len(y_tmp))]
+            sub[1, 0].plot(x, y_d, label="Все статьи")
+            sub[1, 0].set_title("Расход по всем статьям")
+            sub[1, 0].legend(loc="best")
+            plt.setp(sub[1, 0].get_xticklabels(), fontsize=7)
+           # sub[1, 0].set_xtickslabels(rotation=90)
+            # plt.figure(num=4, figsize=(7, 5))
+            # plt.clf()
+            sub[1, 1].clear()
             x = [elem[0] for elem in credits]
             y_tmp = [elem[1] for elem in credits]
-            y = [sum(y_tmp[:i + 1]) for i in range(len(y_tmp))]
-            plt.plot(x, y, label="Все статьи")
-            plt.title("credit sum")
-            plt.legend(loc="best")
-            plt.xticks(rotation=90)
-            plt.show()
-
-
+            y_c = [sum(y_tmp[:i + 1]) for i in range(len(y_tmp))]
+            sub[1, 1].plot(x, y_c, label="Все статьи")
+            sub[1, 1].set_title("Приход по всем статьям")
+            sub[1, 1].legend(loc="best")
+            plt.setp(sub[1, 1].get_xticklabels(), fontsize=7)
+            # sub[1, 1].set_xticklabels(x, rotation=90)
+            # sub[1, 1].set_yticklabels(y_c)
+            #sub[1, 1].set_xtickslabels(rotation=90)
+        plt.tight_layout()
+        plt.figure(num="Прибыль", figsize=(7, 5))
+        plt.clf()
+        y = [y_c[i] - y_d[i] for i in range(len(y_d))]
+        plt.plot(x, y)
+        plt.title("Прибыль по времени")
+        plt.xticks(fontsize=7)
+        plt.tight_layout()
